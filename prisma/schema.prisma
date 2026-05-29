@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  phone     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  memberships GroupMember[]
+  checkins    Checkin[]
+}
+
+model Group {
+  id        String   @id @default(cuid())
+  name      String
+  inviteCode String  @unique
+  createdAt DateTime @default(now())
+
+  members GroupMember[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  nickname  String
+  joinedAt  DateTime @default(now())
+
+  userId  String
+  groupId String
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
+}
+
+model Task {
+  id      String @id @default(cuid())
+  type    String // "group" | "personal"
+  title   String
+  order   Int
+  enabled Boolean @default(true)
+
+  checkins Checkin[]
+}
+
+model Checkin {
+  id        String   @id @default(cuid())
+  date      String   // YYYY-MM-DD
+  checkedAt DateTime @default(now())
+
+  userId String
+  taskId String
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, taskId, date])
+}

@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+*.pem
+.env
+.env*.local
+npm-debug.log*
+.vercel
+prisma/dev.db
