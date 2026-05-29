@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-export async function POST(request: Request) {
+export async function DELETE(request: Request) {
   try {
     const session = await getSession();
     if (!session) {
@@ -17,7 +17,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "无权限" }, { status: 403 });
     }
 
-    const { id } = await request.json();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json({ error: "缺少事项ID" }, { status: 400 });

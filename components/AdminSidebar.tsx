@@ -19,9 +19,11 @@ export default function AdminSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
+    const res = await fetch("/api/auth/logout", { method: "POST" });
+    if (res.ok) {
+      router.push("/login");
+      router.refresh();
+    }
   }
 
   const sidebarContent = (

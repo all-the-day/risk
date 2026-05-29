@@ -114,10 +114,8 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
     if (!confirm("确定删除该事项？已有打卡记录将同时删除。")) return;
     setError(null);
 
-    const res = await fetch("/api/admin/tasks/delete", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: taskId }),
+    const res = await fetch(`/api/admin/tasks/delete?id=${taskId}`, {
+      method: "DELETE",
     });
 
     if (res.ok) {

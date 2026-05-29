@@ -24,6 +24,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "缺少必填字段" }, { status: 400 });
     }
 
+    if (title.length > 100) {
+      return NextResponse.json({ error: "事项标题不能超过100字" }, { status: 400 });
+    }
+
     if (type !== "group" && type !== "personal") {
       return NextResponse.json({ error: "类型无效" }, { status: 400 });
     }
