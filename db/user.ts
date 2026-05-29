@@ -23,3 +23,10 @@ export async function requireUser() {
   if (!user) redirect("/login");
   return user;
 }
+
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!user.isAdmin) redirect("/today");
+  return user;
+}

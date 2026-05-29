@@ -11,6 +11,7 @@ model User {
   id        String   @id @default(cuid())
   phone     String   @unique
   password  String
+  isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
   memberships GroupMember[]
@@ -18,10 +19,11 @@ model User {
 }
 
 model Group {
-  id        String   @id @default(cuid())
-  name      String
-  inviteCode String  @unique
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  name       String
+  inviteCode String   @unique
+  disabled   Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   members GroupMember[]
 }
