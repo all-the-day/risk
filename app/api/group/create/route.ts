@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { createGroup, joinGroup } from "@/db/group";
+import { createGroup, joinGroup, getGroupByInviteCode } from "@/db/group";
 import { generateInviteCode } from "@/lib/utils";
 
 export async function POST(request: Request) {
@@ -19,9 +19,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const inviteCode = generateInviteCode();
-    const group = await createGroup(name, inviteCode);
-    await joinGroup(session.userId, group.id, nickname);
+    let inviteCode: string = "";
+    let group;
+    const maxAttempts = 10;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      inviteCode = generateInviteCode();
+      const existing = await getGroupByInviteCode(inviteCode);
+      if (!existing) {
+        group = await createGroup(name, inviteCode);
+        break;
+      }
+      if (attempt === maxAttempts - 1) {
+        throw new Error("无法生成唯一邀请码，请稍后重试");
+      }
+    }
+    await joinGroup(session.userId, group!.id, nickname);
 
     return NextResponse.json({ success: true, inviteCode });
   } catch (error) {
