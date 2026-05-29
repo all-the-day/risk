@@ -16,6 +16,7 @@ model User {
 
   memberships GroupMember[]
   checkins    Checkin[]
+  feedbacks   Feedback[]
 }
 
 model Group {
@@ -64,4 +65,15 @@ model Checkin {
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@unique([userId, taskId, date])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String   // "bug" | "feature"
+  content   String
+  status    String   @default("pending") // "pending" | "resolved"
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
