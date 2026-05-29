@@ -20,8 +20,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const date = searchParams.get("date");
 
-    if (!date) {
-      return NextResponse.json({ error: "缺少日期参数" }, { status: 400 });
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return NextResponse.json(
+        { error: "日期格式无效，应为 yyyy-MM-dd" },
+        { status: 400 }
+      );
     }
 
     const checkins = await prisma.checkin.findMany({
@@ -36,6 +39,6 @@ export async function GET(request: Request) {
     return NextResponse.json(checkins);
   } catch (error) {
     const message = error instanceof Error ? error.message : "查询失败";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

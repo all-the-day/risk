@@ -22,16 +22,17 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
+    const { disabled } = body;
 
     const group = await prisma.group.update({
       where: { id },
-      data: body,
+      data: { disabled },
     });
 
     return NextResponse.json(group);
   } catch (error) {
     const message = error instanceof Error ? error.message : "操作失败";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -56,6 +57,10 @@ export async function DELETE(
     const { id } = await params;
     const { memberId } = await request.json();
 
+    if (!memberId) {
+      return NextResponse.json({ error: "缺少成员ID" }, { status: 400 });
+    }
+
     await prisma.groupMember.delete({
       where: { id: memberId, groupId: id },
     });
@@ -63,6 +68,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "操作失败";
-    return NextResponse.json({ error: message }, { status: 400 });
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
