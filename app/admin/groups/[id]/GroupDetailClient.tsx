@@ -19,8 +19,10 @@ interface GroupData {
 export default function GroupDetailClient({ group }: { group: GroupData }) {
   const router = useRouter();
   const [disabled, setDisabled] = useState(group.disabled);
+  const [error, setError] = useState<string | null>(null);
 
   async function toggleDisabled() {
+    setError(null);
     const res = await fetch(`/api/admin/groups/${group.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -30,11 +32,15 @@ export default function GroupDetailClient({ group }: { group: GroupData }) {
     if (res.ok) {
       setDisabled(!disabled);
       router.refresh();
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
   async function removeMember(memberId: string) {
     if (!confirm("确定移除该成员？")) return;
+    setError(null);
 
     const res = await fetch(`/api/admin/groups/${group.id}`, {
       method: "DELETE",
@@ -44,11 +50,20 @@ export default function GroupDetailClient({ group }: { group: GroupData }) {
 
     if (res.ok) {
       router.refresh();
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow p-4">
         <div className="flex items-center justify-between">
           <span

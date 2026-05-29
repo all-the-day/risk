@@ -20,28 +20,43 @@ export default function CheckinsClient({
   const [date, setDate] = useState(initialDate);
   const [checkins, setCheckins] = useState(initialCheckins);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function loadDate(newDate: string) {
     setLoading(true);
+    setError(null);
     setDate(newDate);
 
-    const res = await fetch(`/api/admin/checkins?date=${newDate}`);
-    if (res.ok) {
-      const data = await res.json();
-      setCheckins(data);
+    try {
+      const res = await fetch(`/api/admin/checkins?date=${newDate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCheckins(data);
+      } else {
+        const data = await res.json();
+        setError(data.error || "查询失败");
+        setCheckins([]);
+      }
+    } catch {
+      setError("网络错误");
+      setCheckins([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
     <div>
-      <div className="mb-4">
+      <div className="flex items-center gap-3 mb-4">
         <input
           type="date"
           value={date}
           onChange={(e) => loadDate(e.target.value)}
           className="px-3 py-2 border rounded"
         />
+        {error && (
+          <span className="text-sm text-red-500">{error}</span>
+        )}
       </div>
 
       {loading ? (

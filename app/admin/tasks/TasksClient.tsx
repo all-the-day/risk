@@ -18,8 +18,11 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
   const [tasks, setTasks] = useState(initialTasks);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
+  const [orderDrafts, setOrderDrafts] = useState<Record<string, number>>({});
+  const [error, setError] = useState<string | null>(null);
 
   async function toggleEnabled(taskId: string, enabled: boolean) {
+    setError(null);
     const res = await fetch(`/api/admin/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -30,10 +33,14 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, enabled: !enabled } : t))
       );
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
   async function saveTitle(taskId: string) {
+    setError(null);
     const res = await fetch(`/api/admin/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -45,10 +52,17 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
         prev.map((t) => (t.id === taskId ? { ...t, title: editTitle } : t))
       );
       setEditingId(null);
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
-  async function updateOrder(taskId: string, order: number) {
+  async function saveOrder(taskId: string) {
+    const order = orderDrafts[taskId];
+    if (order === undefined) return;
+    setError(null);
+
     const res = await fetch(`/api/admin/tasks/${taskId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -59,6 +73,14 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, order } : t))
       );
+      setOrderDrafts((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
@@ -67,27 +89,36 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
       <TaskSection
         title="团体事项"
         tasks={groupTasks}
         editingId={editingId}
         editTitle={editTitle}
+        orderDrafts={orderDrafts}
         setEditTitle={setEditTitle}
         setEditingId={setEditingId}
+        setOrderDrafts={setOrderDrafts}
         toggleEnabled={toggleEnabled}
         saveTitle={saveTitle}
-        updateOrder={updateOrder}
+        saveOrder={saveOrder}
       />
       <TaskSection
         title="个人事项"
         tasks={personalTasks}
         editingId={editingId}
         editTitle={editTitle}
+        orderDrafts={orderDrafts}
         setEditTitle={setEditTitle}
         setEditingId={setEditingId}
+        setOrderDrafts={setOrderDrafts}
         toggleEnabled={toggleEnabled}
         saveTitle={saveTitle}
-        updateOrder={updateOrder}
+        saveOrder={saveOrder}
       />
     </div>
   );
@@ -98,21 +129,25 @@ function TaskSection({
   tasks,
   editingId,
   editTitle,
+  orderDrafts,
   setEditTitle,
   setEditingId,
+  setOrderDrafts,
   toggleEnabled,
   saveTitle,
-  updateOrder,
+  saveOrder,
 }: {
   title: string;
   tasks: Task[];
   editingId: string | null;
   editTitle: string;
+  orderDrafts: Record<string, number>;
   setEditTitle: (v: string) => void;
   setEditingId: (v: string | null) => void;
+  setOrderDrafts: (fn: (prev: Record<string, number>) => Record<string, number>) => void;
   toggleEnabled: (id: string, enabled: boolean) => void;
   saveTitle: (id: string) => void;
-  updateOrder: (id: string, order: number) => void;
+  saveOrder: (id: string) => void;
 }) {
   return (
     <div className="bg-white rounded-lg shadow">
@@ -128,10 +163,14 @@ function TaskSection({
             <div className="flex items-center space-x-3">
               <input
                 type="number"
-                value={task.order}
+                value={orderDrafts[task.id] ?? task.order}
                 onChange={(e) =>
-                  updateOrder(task.id, parseInt(e.target.value) || 0)
+                  setOrderDrafts((prev) => ({
+                    ...prev,
+                    [task.id]: parseInt(e.target.value) || 0,
+                  }))
                 }
+                onBlur={() => saveOrder(task.id)}
                 className="w-12 px-2 py-1 border rounded text-center text-sm"
               />
               {editingId === task.id ? (
@@ -146,7 +185,7 @@ function TaskSection({
                 />
               ) : (
                 <span
-                  className={`text-sm ${
+                  className={`text-sm cursor-pointer ${
                     task.enabled ? "text-gray-800" : "text-gray-400"
                   }`}
                   onClick={() => {

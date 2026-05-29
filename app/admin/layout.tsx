@@ -7,11 +7,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  try {
-    await requireAdmin();
-  } catch {
-    redirect("/login");
-  }
+  await requireAdmin();
 
   return (
     <div className="flex min-h-screen bg-gray-100">
