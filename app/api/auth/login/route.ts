@@ -12,8 +12,8 @@ export async function POST(request: Request) {
       );
     }
 
-    await login(phone, password);
-    return NextResponse.json({ success: true });
+    const user = await login(phone, password);
+    return NextResponse.json({ success: true, isAdmin: user.isAdmin });
   } catch (error) {
     const message = error instanceof Error ? error.message : "登录失败";
     return NextResponse.json({ error: message }, { status: 400 });

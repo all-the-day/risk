@@ -30,7 +30,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/today");
+      router.push(data.isAdmin ? "/admin" : "/today");
       router.refresh();
     } catch {
       setError("网络错误，请重试");
