@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "每日功课",
+  title: "日课",
   description: "匿名协作式每日功课系统",
 };
 
