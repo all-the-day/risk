@@ -5,6 +5,9 @@ out/
 *.pem
 .env
 .env*.local
+.env.production
 npm-debug.log*
 .vercel
 prisma/dev.db
+*.tar.gz
+*.zip
