@@ -1,33 +1,10 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "instructions": ["AGENTS.md"],
-  "agent": {
-    "reviewer": {
-      "description": "Review agent for finding issues, judging severity, and outputting fix suggestions.",
-      "mode": "subagent",
-      "model": "opencode-go/mimo-v2.5-pro",
-      "permission": {
-        "edit": "deny",
-        "bash": "ask"
-      }
-    },
-    "fixer": {
-      "description": "Fix agent for making the smallest safe code changes based on review results.",
-      "mode": "subagent",
-      "model": "opencode-go/mimo-v2.5-pro",
-      "permission": {
-        "edit": "allow",
-        "bash": "ask"
-      }
-    },
-    "verifier": {
-      "description": "Verification agent for checking whether the fix truly resolved the issue and introduced no regressions.",
-      "mode": "subagent",
-      "model": "opencode-go/mimo-v2.5-pro",
-      "permission": {
-        "edit": "deny",
-        "bash": "ask"
-      }
+  "mcp": {
+    "meshterm": {
+      "type": "local",
+      "command": ["meshterm", "mcp"],
+      "enabled": true
     }
   }
 }
