@@ -31,7 +31,6 @@ export default async function TodayPage() {
         <TodayClient
           groupTasks={groupTasks}
           personalTasks={personalTasks}
-          date={today}
         />
       </main>
     </div>

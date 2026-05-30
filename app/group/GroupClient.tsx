@@ -11,7 +11,6 @@ interface TaskStatusItem {
 interface GroupClientProps {
   taskStatus: TaskStatusItem[];
   allDone: boolean;
-  groupName: string;
 }
 
 export default function GroupClient({

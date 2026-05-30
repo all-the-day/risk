@@ -15,7 +15,6 @@ interface TaskStatus {
 interface TodayClientProps {
   groupTasks: TaskStatus[];
   personalTasks: TaskStatus[];
-  date: string;
 }
 
 export default function TodayClient({

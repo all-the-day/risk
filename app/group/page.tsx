@@ -29,7 +29,6 @@ export default async function GroupPage() {
         <GroupClient
           taskStatus={groupStatus.taskStatus}
           allDone={groupStatus.allDone}
-          groupName={groupStatus.groupName}
         />
       </main>
 
