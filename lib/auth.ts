@@ -2,7 +2,12 @@ import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-for-dev"
+  process.env.JWT_SECRET ||
+    (process.env.NODE_ENV === "production"
+      ? (() => {
+          throw new Error("JWT_SECRET environment variable is required in production");
+        })()
+      : "fallback-secret-for-dev")
 );
 
 export interface Session {
