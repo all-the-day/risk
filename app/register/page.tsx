@@ -21,6 +21,7 @@ export default function RegisterPage() {
       return;
     }
 
+    // 前端密码长度校验（UX优化，后端也会校验）
     if (password.length < 6) {
       setError("密码至少6位");
       return;

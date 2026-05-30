@@ -12,6 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // 后端密码长度校验（主要校验）
     if (password.length < 6) {
       return NextResponse.json(
         { error: "密码至少6位" },
