@@ -10,6 +10,7 @@ const navItems = [
   { href: "/admin/groups", label: "团体" },
   { href: "/admin/users", label: "用户" },
   { href: "/admin/checkins", label: "打卡" },
+  { href: "/admin/activities", label: "活动模板" },
   { href: "/admin/feedback", label: "反馈" },
 ];
 

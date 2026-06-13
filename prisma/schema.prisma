@@ -14,9 +14,10 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  memberships GroupMember[]
-  checkins    Checkin[]
-  feedbacks   Feedback[]
+  memberships      GroupMember[]
+  checkins         Checkin[]
+  feedbacks        Feedback[]
+  activityRecords  ActivityRecord[]
 }
 
 model Group {
@@ -76,4 +77,63 @@ model Feedback {
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  maxScore    Int
+  period      String   @default("weekly") // "daily" | "weekly" | "monthly"
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  categories ActivityCategory[]
+  items      ActivityItem[]
+}
+
+model ActivityCategory {
+  id         String   @id @default(cuid())
+  templateId String
+  name       String
+  order      Int
+  createdAt  DateTime @default(now())
+
+  template ActivityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  items    ActivityItem[]
+}
+
+model ActivityItem {
+  id         String   @id @default(cuid())
+  templateId String
+  categoryId String?
+  parentId   String?
+  name       String
+  fullName   String?
+  score      Int
+  order      Int
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  template ActivityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  category ActivityCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  parent   ActivityItem?    @relation("ItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children ActivityItem[]   @relation("ItemHierarchy")
+
+  records ActivityRecord[]
+}
+
+model ActivityRecord {
+  id        String   @id @default(cuid())
+  userId    String
+  itemId    String
+  date      String
+  score     Int
+  note      String?
+  checkedAt DateTime @default(now())
+
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item ActivityItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemId, date])
 }
