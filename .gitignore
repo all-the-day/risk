@@ -11,3 +11,4 @@ npm-debug.log*
 prisma/dev.db
 *.tar.gz
 *.zip
+*.log
