@@ -69,6 +69,7 @@ async function main() {
         name: "CX",
         fullName: "晨兴",
         score: 6,
+        checksPerWeek: 6,
         order: 1,
       },
     });
@@ -79,6 +80,7 @@ async function main() {
         name: "追求",
         fullName: "追求",
         score: 6,
+        checksPerWeek: 6,
         order: 2,
       },
     });
@@ -124,6 +126,7 @@ async function main() {
         name: "团体DG",
         fullName: "团体祷告",
         score: 6,
+        checksPerWeek: 6,
         order: 4,
       },
     });

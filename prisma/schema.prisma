@@ -45,11 +45,14 @@ model GroupMember {
 }
 
 model Task {
-  id      String @id @default(cuid())
-  type    String // "group" | "personal"
-  title   String
-  order   Int
-  enabled Boolean @default(true)
+  id             String   @id @default(cuid())
+  type           String   // "group" | "personal"
+  title          String
+  order          Int
+  enabled        Boolean  @default(true)
+  score          Int      @default(0)   // 周最高分，0=无分数
+  checksPerWeek  Int      @default(1)   // 一周可打卡次数
+  activityItemId String?                 // 关联的活动模板项
 
   checkins Checkin[]
 }
@@ -110,8 +113,9 @@ model ActivityItem {
   parentId   String?
   name       String
   fullName   String?
-  score      Int
-  order      Int
+  score         Int
+  checksPerWeek Int      @default(1)   // 一周可打卡次数
+  order         Int
   enabled    Boolean  @default(true)
   createdAt  DateTime @default(now())
 

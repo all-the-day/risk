@@ -36,6 +36,27 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
     period: "weekly",
   });
 
+  const [activatingId, setActivatingId] = useState<string | null>(null);
+
+  async function activateTemplate(id: string, name: string) {
+    if (!confirm(`确定启用模板"${name}"？当前所有事项将被替换。`)) return;
+    setError(null);
+    setActivatingId(id);
+
+    const res = await fetch(`/api/admin/activities/templates/${id}/activate`, {
+      method: "POST",
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      setError(null);
+    } else {
+      const data = await res.json();
+      setError(data.error || "启用失败");
+    }
+    setActivatingId(null);
+  }
+
   async function createTemplate() {
     setError(null);
     if (!newTemplate.name.trim()) {
@@ -200,6 +221,17 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
                     className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"
                   >
                     编辑
+                  </button>
+                  <button
+                    onClick={() => activateTemplate(tpl.id, tpl.name)}
+                    disabled={activatingId === tpl.id}
+                    className={`px-3 py-1 rounded text-xs font-medium ${
+                      activatingId === tpl.id
+                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                        : "bg-green-100 text-green-700 hover:bg-green-200"
+                    }`}
+                  >
+                    {activatingId === tpl.id ? "启用中..." : "启用"}
                   </button>
                   <button
                     onClick={() => deleteTemplate(tpl.id, tpl.name)}
