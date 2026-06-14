@@ -21,6 +21,7 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
   const [orderDrafts, setOrderDrafts] = useState<Record<string, number>>({});
   const [error, setError] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [showDisabled, setShowDisabled] = useState(false);
   const [newTask, setNewTask] = useState({ type: "group", title: "", order: 0 });
 
   async function toggleEnabled(taskId: string, enabled: boolean) {
@@ -126,8 +127,8 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
     }
   }
 
-  const groupTasks = tasks.filter((t) => t.type === "group");
-  const personalTasks = tasks.filter((t) => t.type === "personal");
+  const groupTasks = tasks.filter((t) => t.type === "group" && (showDisabled || t.enabled));
+  const personalTasks = tasks.filter((t) => t.type === "personal" && (showDisabled || t.enabled));
 
   return (
     <div className="space-y-6">
@@ -190,12 +191,29 @@ export default function TasksClient({ initialTasks }: TasksClientProps) {
             </div>
           </div>
         ) : (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-          >
-            + 新增事项
-          </button>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => setShowCreate(true)}
+              className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+            >
+              + 新增事项
+            </button>
+            <button
+              onClick={() => setShowDisabled(!showDisabled)}
+              className={`px-4 py-2 rounded text-sm ${
+                showDisabled
+                  ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              {showDisabled ? "隐藏已停用" : "显示全部"}
+            </button>
+            {!showDisabled && (
+              <span className="text-xs text-gray-400">
+                已过滤停用事项
+              </span>
+            )}
+          </div>
         )}
       </div>
 
