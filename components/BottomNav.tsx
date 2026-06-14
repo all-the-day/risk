@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 const navItems = [
   { href: "/today", label: "今日" },
+  { href: "/report", label: "报告" },
   { href: "/group", label: "团体" },
   { href: "/profile", label: "我的" },
 ];

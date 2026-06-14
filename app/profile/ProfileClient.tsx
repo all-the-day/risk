@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface ProfileClientProps {
   nickname: string;
@@ -108,6 +109,12 @@ export default function ProfileClient({
 
       {/* Actions */}
       <div className="space-y-3">
+        <Link
+          href="/report"
+          className="block w-full py-3 text-center text-blue-500 bg-white rounded-xl shadow-sm hover:bg-gray-50"
+        >
+          周报告
+        </Link>
         <button
           onClick={() => setShowFeedback(true)}
           className="w-full py-3 text-center text-blue-500 bg-white rounded-xl shadow-sm hover:bg-gray-50"
