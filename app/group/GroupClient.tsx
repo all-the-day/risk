@@ -3,26 +3,21 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-interface TaskStatusItem {
-  taskId: string;
-  taskTitle: string;
-  completedCount: number;
-  totalMembers: number;
-  allDone: boolean;
+interface MemberDaily {
+  userId: string;
+  nickname: string;
+  done: number;
 }
 
 interface GroupClientProps {
-  taskStatus: TaskStatusItem[];
+  members: MemberDaily[];
+  total: number;
   allDone: boolean;
 }
 
-export default function GroupClient({
-  taskStatus,
-  allDone,
-}: GroupClientProps) {
+export default function GroupClient({ members, total, allDone }: GroupClientProps) {
   return (
     <>
-      {/* Status banner */}
       {allDone ? (
         <Card className="bg-success/30 border-success/30 mb-6">
           <CardContent className="p-4 text-center">
@@ -39,51 +34,44 @@ export default function GroupClient({
         </Card>
       )}
 
-      {/* Task progress */}
-      <div className="space-y-4">
-        {taskStatus.map((task) => {
-          const percentage =
-            task.totalMembers > 0
-              ? Math.round((task.completedCount / task.totalMembers) * 100)
-              : 0;
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">本家今日</h2>
+            <span className="text-xs text-muted-foreground">
+              共 {total} 项
+            </span>
+          </div>
 
-          return (
-            <Card key={task.taskId}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-medium">{task.taskTitle}</h3>
-                  <Badge variant={task.allDone ? "default" : "secondary"}>
-                    {task.completedCount}/{task.totalMembers}
-                  </Badge>
+          <div className="space-y-3">
+            {members.map((member) => {
+              const pct = total > 0 ? (member.done / total) * 100 : 0;
+              const finished = total > 0 && member.done === total;
+              return (
+                <div key={member.userId}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm">{member.nickname}</span>
+                    <Badge
+                      variant={finished ? "default" : "secondary"}
+                      className="text-[11px]"
+                    >
+                      {member.done}/{total}
+                    </Badge>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-1.5">
+                    <div
+                      className={`h-1.5 rounded-full transition-all ${
+                        finished ? "bg-success" : "bg-primary"
+                      }`}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
                 </div>
-
-                {/* Progress bar */}
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all ${
-                      task.allDone ? "bg-success" : "bg-primary"
-                    }`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-
-                {/* Status text */}
-                <p
-                  className={`text-xs mt-2 ${
-                    task.allDone
-                      ? "text-success-foreground font-medium"
-                      : "text-warning-foreground"
-                  }`}
-                >
-                  {task.allDone
-                    ? "已完成"
-                    : `还差 ${task.totalMembers - task.completedCount} 人`}
-                </p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 }

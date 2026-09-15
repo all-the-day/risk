@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { requireUser } from "@/db/user";
-import { getUserCheckinStatus } from "@/services/checkin";
+import { requireUser } from "@/lib/auth";
 import { getTodayString, formatDisplayDate } from "@/lib/date";
+import { getDailyChecklist } from "@/services/activity";
 import TodayClient from "./TodayClient";
 
 export default async function TodayPage() {
@@ -11,12 +11,8 @@ export default async function TodayPage() {
     redirect("/join");
   }
 
-  const checkinStatus = await getUserCheckinStatus(user.id);
-  const today = getTodayString();
+  const checklist = await getDailyChecklist(user.id, getTodayString());
   const displayDate = formatDisplayDate(new Date());
-
-  const groupTasks = checkinStatus.filter((t: { taskType: string }) => t.taskType === "group");
-  const personalTasks = checkinStatus.filter((t: { taskType: string }) => t.taskType === "personal");
 
   return (
     <div className="min-h-screen pb-20">
@@ -28,10 +24,16 @@ export default async function TodayPage() {
       </header>
 
       <main className="max-w-md mx-auto px-4 py-6">
-        <TodayClient
-          groupTasks={groupTasks}
-          personalTasks={personalTasks}
-        />
+        {checklist ? (
+          <TodayClient
+            rows={checklist.rows}
+            checkedItemIds={checklist.checkedItemIds}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            管理员还没有启用事项模板，请稍后再来。
+          </p>
+        )}
       </main>
     </div>
   );

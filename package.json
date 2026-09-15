@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:seed": "prisma db seed"
+    "db:seed": "prisma db seed",
+    "db:seed:demo": "npx tsx prisma/seed-demo.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

@@ -1,5 +1,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 
 const secret = new TextEncoder().encode(
   process.env.JWT_SECRET ||
@@ -49,4 +51,34 @@ export async function getSession(): Promise<Session | null> {
 export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete("session");
+}
+
+// 当前登录用户（含所属团体），未登录返回 null
+export async function getCurrentUser() {
+  const session = await getSession();
+  if (!session) return null;
+
+  return prisma.user.findUnique({
+    where: { id: session.userId },
+    include: {
+      memberships: {
+        include: { group: true },
+      },
+    },
+  });
+}
+
+// 页面守卫：未登录跳登录页
+export async function requireUser() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return user;
+}
+
+// 后台守卫：未登录跳登录页，非管理员跳前台
+export async function requireAdmin() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!user.isAdmin) redirect("/today");
+  return user;
 }

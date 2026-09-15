@@ -4,34 +4,38 @@ import { useState } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface CheckinButtonProps {
-  taskId: string;
+interface ItemCheckButtonProps {
+  itemId: string;
   checked: boolean;
-  onToggle: (taskId: string, checked: boolean) => void;
+  onToggle: (itemId: string, checked: boolean) => void;
+  onError: (message: string) => void;
 }
 
-export default function CheckinButton({
-  taskId,
+export default function ItemCheckButton({
+  itemId,
   checked,
   onToggle,
-}: CheckinButtonProps) {
+  onError,
+}: ItemCheckButtonProps) {
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
     setLoading(true);
     try {
-      const res = await fetch("/api/checkin", {
+      const res = await fetch("/api/records", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taskId }),
+        body: JSON.stringify({ itemId }),
       });
+      const data = await res.json();
 
       if (res.ok) {
-        const data = await res.json();
-        onToggle(taskId, data.checked);
+        onToggle(itemId, data.checked);
+      } else {
+        onError(data.error || "打卡失败");
       }
     } catch {
-      // ignore
+      onError("网络错误，请重试");
     } finally {
       setLoading(false);
     }
@@ -43,6 +47,8 @@ export default function CheckinButton({
       disabled={loading}
       variant="ghost"
       size="icon"
+      data-item-id={itemId}
+      aria-label={checked ? "取消打卡" : "打卡"}
       className={`rounded-full ${
         checked
           ? "bg-success-foreground text-white hover:bg-success-foreground/90"

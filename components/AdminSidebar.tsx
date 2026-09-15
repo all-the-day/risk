@@ -6,12 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { Menu, X } from "lucide-react";
 
 const navItems = [
-  { href: "/admin", label: "总览" },
-  { href: "/admin/tasks", label: "事项" },
+  { href: "/admin/scores", label: "周分录入" },
+  { href: "/admin/activities", label: "事项模板" },
   { href: "/admin/groups", label: "团体" },
   { href: "/admin/users", label: "用户" },
-  { href: "/admin/checkins", label: "打卡" },
-  { href: "/admin/activities", label: "活动模板" },
   { href: "/admin/feedback", label: "反馈" },
 ];
 

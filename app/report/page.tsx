@@ -1,68 +1,44 @@
-import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
-import { getWeekString, formatWeekLabel, getWeekRange, formatDate } from "@/lib/date";
+import { requireUser } from "@/lib/auth";
+import { getRecentWeeks } from "@/lib/date";
+import { getWeeklyTable } from "@/services/weekly-score";
 import ReportClient from "./ReportClient";
 
 export default async function ReportPage() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/login");
+  const user = await requireUser();
+
+  if (user.memberships.length === 0) {
+    redirect("/join");
   }
 
-  const weekStr = getWeekString();
-  const weekLabel = formatWeekLabel(weekStr);
-
-  // Get all scored tasks (score > 0 means they have scoring)
-  const tasks = await prisma.task.findMany({
-    where: { enabled: true, score: { gt: 0 } },
-    orderBy: { order: "asc" },
-  });
-
-  // Get this week's checkins for the user
-  const { start, end } = getWeekRange();
-  const checkins = await prisma.checkin.findMany({
-    where: {
-      userId: session.userId,
-      taskId: { in: tasks.map((t) => t.id) },
-      date: { gte: formatDate(start), lte: formatDate(end) },
-    },
-  });
-
-  // Group checkins by taskId
-  const checkinMap: Record<string, string[]> = {};
-  for (const c of checkins) {
-    if (!checkinMap[c.taskId]) checkinMap[c.taskId] = [];
-    if (!checkinMap[c.taskId].includes(c.date)) {
-      checkinMap[c.taskId].push(c.date);
-    }
-  }
-
-  // Calculate scores
-  let totalScore = 0;
-  const items = tasks.map((task) => {
-    const checkedDays = checkinMap[task.id]?.length ?? 0;
-    const checksPerWeek = task.checksPerWeek || 1;
-    const scorePerCheck = task.score / checksPerWeek;
-    const earned = Math.min(checkedDays, checksPerWeek) * scorePerCheck;
-    totalScore += earned;
-
-    return {
-      id: task.id,
-      name: task.title,
-      maxScore: task.score,
-      checksPerWeek,
-      checkedDays,
-      earned,
-    };
-  });
+  const membership = user.memberships[0];
+  const table = await getWeeklyTable(membership.groupId, getRecentWeeks(8));
 
   return (
-    <ReportClient
-      weekLabel={weekLabel}
-      items={JSON.parse(JSON.stringify(items))}
-      totalScore={totalScore}
-      maxTotalScore={tasks.reduce((sum, t) => sum + t.score, 0)}
-    />
+    <div className="min-h-screen pb-20">
+      <header className="bg-card border-b px-4 py-4">
+        <div className="max-w-md mx-auto">
+          <h1 className="text-xl font-bold">周表</h1>
+          <p className="text-sm text-muted-foreground">
+            {membership.group.name}
+            {table ? ` · ${table.templateName}` : ""}
+          </p>
+        </div>
+      </header>
+
+      <main className="max-w-md mx-auto px-4 py-6">
+        {table ? (
+          <ReportClient
+            weeks={table.weeks}
+            members={table.members}
+            maxScore={table.maxScore}
+          />
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            管理员还没有启用事项模板，请稍后再来。
+          </p>
+        )}
+      </main>
+    </div>
   );
 }

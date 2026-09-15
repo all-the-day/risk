@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, maxScore, period } = body;
+    const { name, description, maxScore } = body;
 
     if (!name || maxScore == null) {
       return NextResponse.json({ error: "缺少必填字段" }, { status: 400 });
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     }
 
     const template = await prisma.activityTemplate.create({
-      data: { name, description, maxScore, period: period || "weekly" },
+      data: { name, description, maxScore },
     });
 
     return NextResponse.json(template);

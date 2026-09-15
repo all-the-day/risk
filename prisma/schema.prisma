@@ -14,10 +14,10 @@ model User {
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  memberships      GroupMember[]
-  checkins         Checkin[]
-  feedbacks        Feedback[]
-  activityRecords  ActivityRecord[]
+  memberships     GroupMember[]
+  feedbacks       Feedback[]
+  activityRecords ActivityRecord[]
+  weeklyScores    WeeklyScore[]
 }
 
 model Group {
@@ -27,7 +27,8 @@ model Group {
   disabled   Boolean  @default(false)
   createdAt  DateTime @default(now())
 
-  members GroupMember[]
+  members      GroupMember[]
+  weeklyScores WeeklyScore[]
 }
 
 model GroupMember {
@@ -44,36 +45,9 @@ model GroupMember {
   @@unique([userId, groupId])
 }
 
-model Task {
-  id             String   @id @default(cuid())
-  type           String   // "group" | "personal"
-  title          String
-  order          Int
-  enabled        Boolean  @default(true)
-  score          Int      @default(0)   // 周最高分，0=无分数
-  checksPerWeek  Int      @default(1)   // 一周可打卡次数
-  activityItemId String?                 // 关联的活动模板项
-
-  checkins Checkin[]
-}
-
-model Checkin {
-  id        String   @id @default(cuid())
-  date      String   // YYYY-MM-DD
-  checkedAt DateTime @default(now())
-
-  userId String
-  taskId String
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, taskId, date])
-}
-
 model Feedback {
   id        String   @id @default(cuid())
-  type      String   // "bug" | "feature"
+  type      String // "bug" | "feature"
   content   String
   status    String   @default("pending") // "pending" | "resolved"
   createdAt DateTime @default(now())
@@ -86,8 +60,8 @@ model ActivityTemplate {
   id          String   @id @default(cuid())
   name        String
   description String?
-  maxScore    Int
-  period      String   @default("weekly") // "daily" | "weekly" | "monthly"
+  maxScore    Int // 叶子项分值合计，作为周表分母
+  enabled     Boolean  @default(false) // 当前启用的模板
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -113,31 +87,49 @@ model ActivityItem {
   parentId   String?
   name       String
   fullName   String?
-  score         Int
-  checksPerWeek Int      @default(1)   // 一周可打卡次数
-  order         Int
+  score      Int // 该项每周满分
+  checksPerWeek Int   @default(1) // 一周可打卡次数
+  order      Int
   enabled    Boolean  @default(true)
   createdAt  DateTime @default(now())
 
-  template ActivityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template ActivityTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
   category ActivityCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  parent   ActivityItem?    @relation("ItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children ActivityItem[]   @relation("ItemHierarchy")
+  parent   ActivityItem?     @relation("ItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children ActivityItem[]    @relation("ItemHierarchy")
 
   records ActivityRecord[]
 }
 
+// 每日打卡记录（打勾式）：一项一天最多一条
 model ActivityRecord {
   id        String   @id @default(cuid())
   userId    String
   itemId    String
-  date      String
-  score     Int
-  note      String?
+  date      String // YYYY-MM-DD
   checkedAt DateTime @default(now())
 
   user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   item ActivityItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   @@unique([userId, itemId, date])
+  @@index([userId, date])
+}
+
+// 管理员录入的周总分：存在即覆盖自打卡汇总，删除即恢复自动
+model WeeklyScore {
+  id          String   @id @default(cuid())
+  userId      String
+  groupId     String
+  weekStart   String // YYYY-MM-DD，该周周日
+  score       Int
+  updatedById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId, weekStart])
+  @@index([groupId, weekStart])
 }

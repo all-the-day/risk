@@ -4,13 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 
 interface TemplateData {
@@ -18,7 +11,7 @@ interface TemplateData {
   name: string;
   description: string | null;
   maxScore: number;
-  period: string;
+  enabled: boolean;
   createdAt: string;
   updatedAt: string;
   _count: { items: number };
@@ -27,12 +20,6 @@ interface TemplateData {
 interface TemplatesClientProps {
   initialTemplates: TemplateData[];
 }
-
-const periodLabels: Record<string, string> = {
-  daily: "每日",
-  weekly: "每周",
-  monthly: "每月",
-};
 
 export default function TemplatesClient({ initialTemplates }: TemplatesClientProps) {
   const router = useRouter();
@@ -43,13 +30,12 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
     name: "",
     description: "",
     maxScore: 100,
-    period: "weekly",
   });
 
   const [activatingId, setActivatingId] = useState<string | null>(null);
 
   async function activateTemplate(id: string, name: string) {
-    if (!confirm(`确定启用模板"${name}"？当前所有事项将被替换。`)) return;
+    if (!confirm(`确定把「${name}」设为当前启用的模板？`)) return;
     setError(null);
     setActivatingId(id);
 
@@ -58,8 +44,9 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
     });
 
     if (res.ok) {
-      const data = await res.json();
-      setError(null);
+      setTemplates((prev) =>
+        prev.map((t) => ({ ...t, enabled: t.id === id }))
+      );
     } else {
       const data = await res.json();
       setError(data.error || "启用失败");
@@ -83,7 +70,7 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
     if (res.ok) {
       const template = await res.json();
       setTemplates((prev) => [template, ...prev]);
-      setNewTemplate({ name: "", description: "", maxScore: 100, period: "weekly" });
+      setNewTemplate({ name: "", description: "", maxScore: 100 });
       setShowCreate(false);
     } else {
       const data = await res.json();
@@ -129,21 +116,6 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
                   }
                   placeholder="模板名称"
                 />
-                <Select
-                  value={newTemplate.period}
-                  onValueChange={(v) =>
-                    setNewTemplate((prev) => ({ ...prev, period: v || "weekly" }))
-                  }
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="daily">每日</SelectItem>
-                    <SelectItem value="weekly">每周</SelectItem>
-                    <SelectItem value="monthly">每月</SelectItem>
-                  </SelectContent>
-                </Select>
                 <Input
                   type="text"
                   value={newTemplate.description}
@@ -210,9 +182,11 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
                       {tpl.name}
                     </span>
                     <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {periodLabels[tpl.period] || tpl.period}
-                      </span>
+                      {tpl.enabled && (
+                        <span className="text-xs font-medium text-success-foreground">
+                          当前启用
+                        </span>
+                      )}
                       <span className="text-xs text-muted-foreground">
                         满分 {tpl.maxScore}
                       </span>
@@ -239,9 +213,13 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
                       variant="ghost"
                       className="bg-success/30 text-success-foreground hover:bg-success/50"
                       onClick={() => activateTemplate(tpl.id, tpl.name)}
-                      disabled={activatingId === tpl.id}
+                      disabled={activatingId === tpl.id || tpl.enabled}
                     >
-                      {activatingId === tpl.id ? "启用中..." : "启用"}
+                      {tpl.enabled
+                        ? "已启用"
+                        : activatingId === tpl.id
+                          ? "启用中..."
+                          : "启用"}
                     </Button>
                     <Button
                       variant="destructive"

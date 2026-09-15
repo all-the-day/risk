@@ -21,12 +21,17 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, fullName, score, order, enabled, categoryId, parentId } = body;
+    const { name, fullName, score, checksPerWeek, order, enabled, categoryId, parentId } =
+      body;
 
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name;
     if (fullName !== undefined) data.fullName = fullName;
     if (score !== undefined) data.score = score;
+    if (checksPerWeek !== undefined) {
+      const weekly = Number(checksPerWeek);
+      data.checksPerWeek = weekly > 0 ? weekly : 1;
+    }
     if (order !== undefined) data.order = order;
     if (enabled !== undefined) data.enabled = enabled;
     if (categoryId !== undefined) data.categoryId = categoryId;

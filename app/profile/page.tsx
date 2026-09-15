@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireUser } from "@/db/user";
+import { requireUser } from "@/lib/auth";
 import ProfileClient from "./ProfileClient";
 import BottomNav from "@/components/BottomNav";
 

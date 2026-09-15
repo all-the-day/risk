@@ -76,13 +76,12 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, description, maxScore, period } = body;
+    const { name, description, maxScore } = body;
 
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name;
     if (description !== undefined) data.description = description;
     if (maxScore !== undefined) data.maxScore = maxScore;
-    if (period !== undefined) data.period = period;
 
     const template = await prisma.activityTemplate.update({
       where: { id },

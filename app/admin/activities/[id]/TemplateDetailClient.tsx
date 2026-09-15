@@ -19,6 +19,7 @@ interface ItemData {
   name: string;
   fullName: string | null;
   score: number;
+  checksPerWeek: number;
   order: number;
   enabled: boolean;
   categoryId: string | null;
@@ -38,7 +39,7 @@ interface TemplateData {
   name: string;
   description: string | null;
   maxScore: number;
-  period: string;
+  enabled: boolean;
   categories: CategoryData[];
   items: ItemData[];
 }
@@ -63,6 +64,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
   const [editItemName, setEditItemName] = useState("");
   const [editItemFullName, setEditItemFullName] = useState("");
   const [editItemScore, setEditItemScore] = useState(0);
+  const [editItemChecks, setEditItemChecks] = useState(1);
 
   // Add item state
   const [addMode, setAddMode] = useState<"category" | "item" | null>(null);
@@ -71,6 +73,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
   const [addName, setAddName] = useState("");
   const [addFullName, setAddFullName] = useState("");
   const [addScore, setAddScore] = useState(0);
+  const [addChecks, setAddChecks] = useState(1);
 
   // Add category state
   const [addCategoryName, setAddCategoryName] = useState("");
@@ -112,6 +115,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
         name: editItemName,
         fullName: editItemFullName || null,
         score: editItemScore,
+        checksPerWeek: editItemChecks,
       }),
     });
     if (res.ok) {
@@ -168,6 +172,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
         name: addName,
         fullName: addFullName || null,
         score: addScore,
+        checksPerWeek: addChecks,
       }),
     });
     if (res.ok) {
@@ -177,6 +182,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
       setAddName("");
       setAddFullName("");
       setAddScore(0);
+      setAddChecks(1);
       refresh();
     } else {
       const d = await res.json();
@@ -273,6 +279,15 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                 value={editItemScore}
                 onChange={(e) => setEditItemScore(parseInt(e.target.value) || 0)}
                 className="w-16"
+                placeholder="分值"
+              />
+              <Input
+                type="number"
+                value={editItemChecks}
+                onChange={(e) => setEditItemChecks(parseInt(e.target.value) || 1)}
+                className="w-16"
+                placeholder="周次"
+                title="每周需要完成的次数"
               />
               <Button
                 size="xs"
@@ -309,6 +324,12 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
               )}
               <span className="text-xs font-medium text-primary">
                 {item.score}分
+                {item.checksPerWeek > 1 && (
+                  <span className="text-muted-foreground font-normal">
+                    {" · "}
+                    {item.checksPerWeek}次/周
+                  </span>
+                )}
               </span>
             </div>
           )}
@@ -330,6 +351,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                     setEditItemName(item.name);
                     setEditItemFullName(item.fullName || "");
                     setEditItemScore(item.score);
+                    setEditItemChecks(item.checksPerWeek);
                   }}
                 >
                   编辑
@@ -357,6 +379,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                   setAddName("");
                   setAddFullName("");
                   setAddScore(0);
+                  setAddChecks(1);
                 }}
                 title="添加子项"
               >
@@ -454,14 +477,9 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
               </div>
               <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
                 <span>
-                  周期:{" "}
-                  {template.period === "weekly"
-                    ? "每周"
-                    : template.period === "daily"
-                      ? "每日"
-                      : "每月"}
+                  {template.enabled ? "当前启用中" : "未启用"}
                 </span>
-                <span>当前总分: {totalScore()} 分</span>
+                <span>叶子项合计: {totalScore()} 分</span>
               </div>
             </div>
           )}
@@ -493,6 +511,7 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                   setAddName("");
                   setAddFullName("");
                   setAddScore(0);
+                  setAddChecks(1);
                 }}
               >
                 + 添加项目
@@ -543,6 +562,14 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                       placeholder="分值"
                       className="w-20"
                     />
+                    <Input
+                      type="number"
+                      value={addChecks}
+                      onChange={(e) => setAddChecks(parseInt(e.target.value) || 1)}
+                      placeholder="周次"
+                      className="w-20"
+                      title="每周需要完成的次数"
+                    />
                     <Select
                       value={addCategoryId ?? "none"}
                       onValueChange={(v) =>
@@ -550,7 +577,14 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
                       }
                     >
                       <SelectTrigger size="sm" className="min-w-24">
-                        <SelectValue />
+                        <SelectValue>
+                          {(value: string | null) =>
+                            !value || value === "none"
+                              ? "无分类"
+                              : (data.categories.find((cat) => cat.id === value)
+                                  ?.name ?? "无分类")
+                          }
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">无分类</SelectItem>

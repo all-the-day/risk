@@ -17,7 +17,8 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { templateId, categoryId, parentId, name, fullName, score, order } = body;
+    const { templateId, categoryId, parentId, name, fullName, score, checksPerWeek, order } =
+      body;
 
     if (!templateId || !name || score == null) {
       return NextResponse.json({ error: "缺少必填字段" }, { status: 400 });
@@ -46,6 +47,7 @@ export async function POST(request: Request) {
         name,
         fullName: fullName || null,
         score,
+        checksPerWeek: Number(checksPerWeek) > 0 ? Number(checksPerWeek) : 1,
         order: itemOrder,
       },
     });
