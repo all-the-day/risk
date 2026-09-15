@@ -1,7 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getWeekString, formatWeekLabel } from "@/lib/date";
+import { getWeekString, formatWeekLabel, getWeekRange, formatDate } from "@/lib/date";
 import ReportClient from "./ReportClient";
 
 export default async function ReportPage() {
@@ -20,10 +20,12 @@ export default async function ReportPage() {
   });
 
   // Get this week's checkins for the user
+  const { start, end } = getWeekRange();
   const checkins = await prisma.checkin.findMany({
     where: {
       userId: session.userId,
       taskId: { in: tasks.map((t) => t.id) },
+      date: { gte: formatDate(start), lte: formatDate(end) },
     },
   });
 
