@@ -23,7 +23,7 @@ export default async function AdminGroupDetailPage({
   return (
     <div>
       <h1 className="text-2xl font-bold mb-2">{group.name}</h1>
-      <p className="text-gray-500 mb-6">邀请码: {group.inviteCode}</p>
+      <p className="text-muted-foreground mb-6">邀请码: {group.inviteCode}</p>
 
       <GroupDetailClient group={group} />
     </div>

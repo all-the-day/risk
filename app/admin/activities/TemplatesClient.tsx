@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface TemplateData {
   id: string;
@@ -100,151 +110,153 @@ export default function TemplatesClient({ initialTemplates }: TemplatesClientPro
   return (
     <div className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700">
+        <div className="bg-destructive/10 border border-destructive/20 rounded p-3 text-sm text-destructive">
           {error}
         </div>
       )}
 
       {/* Create form */}
-      <div className="bg-white rounded-lg shadow p-4">
-        {showCreate ? (
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <input
-                type="text"
-                value={newTemplate.name}
-                onChange={(e) =>
-                  setNewTemplate((prev) => ({ ...prev, name: e.target.value }))
-                }
-                placeholder="模板名称"
-                className="px-3 py-2 border rounded text-sm"
-              />
-              <select
-                value={newTemplate.period}
-                onChange={(e) =>
-                  setNewTemplate((prev) => ({ ...prev, period: e.target.value }))
-                }
-                className="px-3 py-2 border rounded text-sm"
-              >
-                <option value="daily">每日</option>
-                <option value="weekly">每周</option>
-                <option value="monthly">每月</option>
-              </select>
-              <input
-                type="text"
-                value={newTemplate.description}
-                onChange={(e) =>
-                  setNewTemplate((prev) => ({ ...prev, description: e.target.value }))
-                }
-                placeholder="描述（可选）"
-                className="px-3 py-2 border rounded text-sm"
-              />
-              <input
-                type="number"
-                value={newTemplate.maxScore}
-                onChange={(e) =>
-                  setNewTemplate((prev) => ({
-                    ...prev,
-                    maxScore: parseInt(e.target.value) || 0,
-                  }))
-                }
-                placeholder="满分"
-                className="px-3 py-2 border rounded text-sm"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={createTemplate}
-                className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-              >
-                创建
-              </button>
-              <button
-                onClick={() => setShowCreate(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
-              >
-                取消
-              </button>
-            </div>
-          </div>
-        ) : (
-          <button
-            onClick={() => setShowCreate(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-          >
-            + 新增模板
-          </button>
-        )}
-      </div>
-
-      {/* Template list */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-4 py-3 border-b">
-          <h2 className="font-semibold">模板列表</h2>
-        </div>
-        <div className="divide-y">
-          {templates.length === 0 ? (
-            <div className="px-4 py-6 text-center text-gray-400 text-sm">
-              暂无模板
+      <Card>
+        <CardContent className="p-4">
+          {showCreate ? (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  type="text"
+                  value={newTemplate.name}
+                  onChange={(e) =>
+                    setNewTemplate((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  placeholder="模板名称"
+                />
+                <Select
+                  value={newTemplate.period}
+                  onValueChange={(v) =>
+                    setNewTemplate((prev) => ({ ...prev, period: v || "weekly" }))
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">每日</SelectItem>
+                    <SelectItem value="weekly">每周</SelectItem>
+                    <SelectItem value="monthly">每月</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="text"
+                  value={newTemplate.description}
+                  onChange={(e) =>
+                    setNewTemplate((prev) => ({ ...prev, description: e.target.value }))
+                  }
+                  placeholder="描述（可选）"
+                />
+                <Input
+                  type="number"
+                  value={newTemplate.maxScore}
+                  onChange={(e) =>
+                    setNewTemplate((prev) => ({
+                      ...prev,
+                      maxScore: parseInt(e.target.value) || 0,
+                    }))
+                  }
+                  placeholder="满分"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={createTemplate} size="sm">
+                  创建
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCreate(false)}
+                >
+                  取消
+                </Button>
+              </div>
             </div>
           ) : (
-            templates.map((tpl) => (
-              <div
-                key={tpl.id}
-                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50"
-              >
-                <div
-                  className="flex-1 cursor-pointer"
-                  onClick={() => router.push(`/admin/activities/${tpl.id}`)}
-                >
-                  <span className="text-sm font-medium text-gray-800">
-                    {tpl.name}
-                  </span>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="text-xs text-gray-500">
-                      {periodLabels[tpl.period] || tpl.period}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      满分 {tpl.maxScore}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {tpl._count?.items ?? 0} 项
-                    </span>
-                  </div>
-                  {tpl.description && (
-                    <p className="text-xs text-gray-400 mt-0.5">{tpl.description}</p>
-                  )}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => router.push(`/admin/activities/${tpl.id}`)}
-                    className="px-3 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200"
-                  >
-                    编辑
-                  </button>
-                  <button
-                    onClick={() => activateTemplate(tpl.id, tpl.name)}
-                    disabled={activatingId === tpl.id}
-                    className={`px-3 py-1 rounded text-xs font-medium ${
-                      activatingId === tpl.id
-                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                        : "bg-green-100 text-green-700 hover:bg-green-200"
-                    }`}
-                  >
-                    {activatingId === tpl.id ? "启用中..." : "启用"}
-                  </button>
-                  <button
-                    onClick={() => deleteTemplate(tpl.id, tpl.name)}
-                    className="px-3 py-1 rounded text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200"
-                  >
-                    删除
-                  </button>
-                </div>
-              </div>
-            ))
+            <Button onClick={() => setShowCreate(true)} size="sm">
+              + 新增模板
+            </Button>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      {/* Template list */}
+      <Card>
+        <CardContent className="p-0">
+          <div className="px-4 py-3 border-b">
+            <h2 className="font-semibold">模板列表</h2>
+          </div>
+          <div className="divide-y">
+            {templates.length === 0 ? (
+              <div className="px-4 py-6 text-center text-muted-foreground text-sm">
+                暂无模板
+              </div>
+            ) : (
+              templates.map((tpl) => (
+                <div
+                  key={tpl.id}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-muted/50"
+                >
+                  <div
+                    className="flex-1 cursor-pointer"
+                    onClick={() => router.push(`/admin/activities/${tpl.id}`)}
+                  >
+                    <span className="text-sm font-medium text-foreground">
+                      {tpl.name}
+                    </span>
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs text-muted-foreground">
+                        {periodLabels[tpl.period] || tpl.period}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        满分 {tpl.maxScore}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {tpl._count?.items ?? 0} 项
+                      </span>
+                    </div>
+                    {tpl.description && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {tpl.description}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      onClick={() => router.push(`/admin/activities/${tpl.id}`)}
+                    >
+                      编辑
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      className="bg-success/30 text-success-foreground hover:bg-success/50"
+                      onClick={() => activateTemplate(tpl.id, tpl.name)}
+                      disabled={activatingId === tpl.id}
+                    >
+                      {activatingId === tpl.id ? "启用中..." : "启用"}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="xs"
+                      onClick={() => deleteTemplate(tpl.id, tpl.name)}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

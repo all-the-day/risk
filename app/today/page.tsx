@@ -20,9 +20,9 @@ export default async function TodayPage() {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
+      <header className="bg-card border-b px-4 py-4">
         <div className="max-w-md mx-auto">
-          <p className="text-sm text-gray-500">{displayDate}</p>
+          <p className="text-sm text-muted-foreground">{displayDate}</p>
           <h1 className="text-xl font-bold">今日功课</h1>
         </div>
       </header>

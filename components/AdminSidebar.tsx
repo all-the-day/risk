@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { Menu, X } from "lucide-react";
 
 const navItems = [
   { href: "/admin", label: "总览" },
@@ -43,10 +44,10 @@ export default function AdminSidebar() {
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`block px-3 py-2 rounded text-sm ${
+              className={`block px-3 py-2 rounded-lg text-sm transition-colors ${
                 isActive
-                  ? "bg-gray-700 text-white"
-                  : "text-gray-300 hover:bg-gray-800"
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               }`}
             >
               {item.label}
@@ -54,17 +55,17 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
-      <div className="mt-8 pt-4 border-t border-gray-700 space-y-1">
+      <div className="mt-8 pt-4 border-t border-sidebar-border space-y-1">
         <Link
           href="/today"
           onClick={() => setMobileOpen(false)}
-          className="block px-3 py-2 rounded text-sm text-gray-400 hover:bg-gray-800"
+          className="block px-3 py-2 rounded-lg text-sm text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
         >
           返回前台
         </Link>
         <button
           onClick={handleLogout}
-          className="block w-full text-left px-3 py-2 rounded text-sm text-red-400 hover:bg-gray-800"
+          className="block w-full text-left px-3 py-2 rounded-lg text-sm text-destructive hover:bg-destructive/10 transition-colors"
         >
           退出登录
         </button>
@@ -75,48 +76,28 @@ export default function AdminSidebar() {
   return (
     <>
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 text-white px-4 py-3 flex items-center justify-between z-50">
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-sidebar text-sidebar-foreground border-b border-sidebar-border px-4 py-3 flex items-center justify-between z-50">
         <h1 className="text-lg font-bold">管理后台</h1>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 hover:bg-gray-800 rounded"
+          className="p-2 rounded-lg hover:bg-sidebar-accent transition-colors"
+          aria-label={mobileOpen ? "关闭菜单" : "打开菜单"}
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {mobileOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
+          {mobileOpen ? <X className="size-6" /> : <Menu className="size-6" />}
         </button>
       </div>
 
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          className="md:hidden fixed inset-0 bg-black/50 z-40"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Mobile menu */}
       <div
-        className={`md:hidden fixed top-14 left-0 right-0 bg-gray-900 text-white p-4 z-40 transform transition-transform ${
+        className={`md:hidden fixed top-14 left-0 right-0 bg-sidebar text-sidebar-foreground border-b border-sidebar-border p-4 z-40 transform transition-transform ${
           mobileOpen ? "translate-y-0" : "-translate-y-full"
         }`}
       >
@@ -124,7 +105,7 @@ export default function AdminSidebar() {
       </div>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:block w-48 bg-gray-900 text-white min-h-screen p-4">
+      <aside className="hidden md:block w-48 bg-sidebar text-sidebar-foreground border-r border-sidebar-border min-h-screen p-4">
         {sidebarContent}
       </aside>
     </>

@@ -14,7 +14,7 @@ export default async function ProfilePage() {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
+      <header className="bg-card border-b px-4 py-4">
         <div className="max-w-md mx-auto">
           <h1 className="text-xl font-bold">我的</h1>
         </div>

@@ -16,10 +16,10 @@ export default async function GroupPage() {
 
   return (
     <div className="min-h-screen pb-20">
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
+      <header className="bg-card border-b px-4 py-4">
         <div className="max-w-md mx-auto">
           <h1 className="text-xl font-bold">{groupStatus.groupName}</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             {groupStatus.totalMembers} 人 · {groupStatus.totalTasks} 项
           </p>
         </div>
