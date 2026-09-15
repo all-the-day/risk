@@ -38,7 +38,6 @@ prisma/         # 数据库 schema
 |------|------|
 | [AGENTS.md](./AGENTS.md) | 项目详细说明 |
 | [MVP_PLAN.md](./doc/MVP_PLAN.md) | MVP 产品规划 |
-| [DEPLOY.md](./doc/DEPLOY.md) | 部署方案 |
 | [模块设计说明.md](./doc/模块设计说明.md) | 模块边界 |
 | [LIST.md](./doc/LIST.md) | 功能跟踪 |
 | [变更记录.md](./doc/变更记录.md) | 变更模板 |
