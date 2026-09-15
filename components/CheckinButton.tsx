@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface CheckinButtonProps {
   taskId: string;
@@ -36,32 +38,22 @@ export default function CheckinButton({
   }
 
   return (
-    <button
+    <Button
       onClick={handleClick}
       disabled={loading}
-      className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+      variant="ghost"
+      size="icon"
+      className={`rounded-full ${
         checked
-          ? "bg-green-500 text-white"
-          : "bg-gray-200 text-gray-400 hover:bg-gray-300"
-      } ${loading ? "opacity-50" : ""}`}
+          ? "bg-success-foreground text-white hover:bg-success-foreground/90"
+          : "bg-muted text-muted-foreground hover:bg-muted/80"
+      }`}
     >
       {loading ? (
-        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="animate-spin" />
       ) : checked ? (
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M5 13l4 4L19 7"
-          />
-        </svg>
+        <Check />
       ) : null}
-    </button>
+    </Button>
   );
 }

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getTodayString } from "@/lib/date";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default async function AdminDashboard() {
   const today = getTodayString();
@@ -55,21 +56,25 @@ export default async function AdminDashboard() {
         <StatCard label="今日打卡" value={todayCheckins} />
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <h2 className="font-semibold mb-3">今日团体完成情况</h2>
-        <p className="text-gray-600">
-          {completedGroups} / {groups.length} 个团体全员完成
-        </p>
-      </div>
+      <Card>
+        <CardContent className="p-4">
+          <h2 className="font-semibold mb-3">今日团体完成情况</h2>
+          <p className="text-muted-foreground">
+            {completedGroups} / {groups.length} 个团体全员完成
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-white rounded-lg shadow p-4">
-      <p className="text-sm text-gray-500">{label}</p>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
+    <Card>
+      <CardContent className="p-4">
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </CardContent>
+    </Card>
   );
 }

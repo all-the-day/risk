@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { ChevronRight, Copy, MessageSquare, LogOut, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface ProfileClientProps {
   nickname: string;
@@ -74,139 +84,147 @@ export default function ProfileClient({
   return (
     <>
       {/* User info */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-            <span className="text-blue-600 font-bold text-lg">
-              {nickname.charAt(0)}
+      <Card className="mb-4">
+        <CardContent className="p-5">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center shadow-sm">
+              <span className="text-white font-bold text-xl">
+                {nickname.charAt(0)}
+              </span>
+            </div>
+            <div>
+              <p className="font-bold text-lg">{nickname}</p>
+              <p className="text-sm text-muted-foreground">{groupName}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Invite code card */}
+      <Card className="mb-4">
+        <CardContent className="p-5">
+          <h3 className="text-sm font-medium text-muted-foreground mb-3">
+            邀请码
+          </h3>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xl tracking-widest font-medium">
+              {inviteCode}
             </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyInviteCode}
+              className="gap-1.5"
+            >
+              <Copy className="size-3.5" />
+              {copied ? "已复制" : "复制"}
+            </Button>
           </div>
-          <div>
-            <p className="font-medium text-gray-800">{nickname}</p>
-            <p className="text-sm text-gray-500">{groupName}</p>
-          </div>
-        </div>
-      </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            分享邀请码给其他人，让他们加入你的团体
+          </p>
+        </CardContent>
+      </Card>
 
-      {/* Invite code */}
-      <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-        <h2 className="text-sm font-medium text-gray-500 mb-2">邀请码</h2>
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-lg tracking-widest text-gray-800">
-            {inviteCode}
-          </span>
-          <button
-            onClick={copyInviteCode}
-            className="px-3 py-1 text-sm bg-gray-100 rounded-lg hover:bg-gray-200"
+      {/* Menu list */}
+      <Card className="mb-8">
+        <CardContent className="p-0">
+          <Link
+            href="/report"
+            className="flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
           >
-            {copied ? "已复制" : "复制"}
+            <div className="flex items-center gap-3">
+              <BarChart3 className="size-4 text-muted-foreground" />
+              <span className="text-sm">周报告</span>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
+          </Link>
+          <div className="border-t" />
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <MessageSquare className="size-4 text-muted-foreground" />
+              <span className="text-sm">意见反馈</span>
+            </div>
+            <ChevronRight className="size-4 text-muted-foreground" />
           </button>
-        </div>
-        <p className="text-xs text-gray-400 mt-2">
-          分享邀请码给其他人，让他们加入你的团体
-        </p>
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Actions */}
-      <div className="space-y-3">
-        <Link
-          href="/report"
-          className="block w-full py-3 text-center text-blue-500 bg-white rounded-xl shadow-sm hover:bg-gray-50"
-        >
-          周报告
-        </Link>
-        <button
-          onClick={() => setShowFeedback(true)}
-          className="w-full py-3 text-center text-blue-500 bg-white rounded-xl shadow-sm hover:bg-gray-50"
-        >
-          意见反馈
-        </button>
-        <button
-          onClick={handleLogout}
-          className="w-full py-3 text-center text-red-500 bg-white rounded-xl shadow-sm hover:bg-gray-50"
-        >
-          退出登录
-        </button>
-      </div>
+      {/* Logout button */}
+      <Button
+        variant="ghost"
+        onClick={handleLogout}
+        className="w-full text-muted-foreground hover:text-destructive gap-2"
+        size="sm"
+      >
+        <LogOut className="size-4" />
+        退出登录
+      </Button>
 
-      {/* Feedback Modal */}
-      {showFeedback && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl w-full max-w-md p-6">
-            {feedbackSuccess ? (
-              <div className="text-center py-4">
-                <p className="text-green-600 font-medium">感谢反馈！</p>
+      {/* Feedback Dialog */}
+      <Dialog open={showFeedback} onOpenChange={setShowFeedback}>
+        <DialogContent>
+          {feedbackSuccess ? (
+            <div className="text-center py-4">
+              <p className="text-success-foreground font-medium">感谢反馈！</p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>意见反馈</DialogTitle>
+              </DialogHeader>
+
+              <div className="flex gap-2">
+                <Button
+                  variant={feedbackType === "bug" ? "destructive" : "outline"}
+                  size="sm"
+                  onClick={() => setFeedbackType("bug")}
+                >
+                  Bug 反馈
+                </Button>
+                <Button
+                  variant={
+                    feedbackType === "feature" ? "default" : "outline"
+                  }
+                  size="sm"
+                  onClick={() => setFeedbackType("feature")}
+                >
+                  功能建议
+                </Button>
               </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold">意见反馈</h2>
-                  <button
-                    onClick={() => setShowFeedback(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
 
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setFeedbackType("bug")}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      feedbackType === "bug"
-                        ? "bg-red-500 text-white"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    Bug 反馈
-                  </button>
-                  <button
-                    onClick={() => setFeedbackType("feature")}
-                    className={`px-4 py-2 rounded-lg text-sm ${
-                      feedbackType === "feature"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    功能建议
-                  </button>
-                </div>
+              <textarea
+                value={feedbackContent}
+                onChange={(e) => setFeedbackContent(e.target.value)}
+                placeholder="请描述你遇到的问题或建议..."
+                className="w-full h-32 px-3 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring text-sm"
+              />
 
-                <textarea
-                  value={feedbackContent}
-                  onChange={(e) => setFeedbackContent(e.target.value)}
-                  placeholder="请描述你遇到的问题或建议..."
-                  className="w-full h-32 px-3 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+              {error && (
+                <p className="text-destructive text-sm">{error}</p>
+              )}
 
-                {error && (
-                  <p className="text-red-500 text-sm mt-2">{error}</p>
-                )}
-
-                <button
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFeedback(false)}
+                >
+                  取消
+                </Button>
+                <Button
                   onClick={submitFeedback}
                   disabled={feedbackLoading}
-                  className="w-full mt-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
                 >
                   {feedbackLoading ? "提交中..." : "提交"}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

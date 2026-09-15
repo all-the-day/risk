@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { Badge } from "@/components/ui/badge";
 
 export default async function AdminUsersPage() {
   const users = await prisma.user.findMany({
@@ -14,45 +15,41 @@ export default async function AdminUsersPage() {
     <div>
       <h1 className="text-2xl font-bold mb-6">用户管理</h1>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="rounded-lg border overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className="bg-muted/50">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 手机号
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 角色
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 所属团体
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+              <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 注册时间
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody>
             {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50">
+              <tr key={user.id} className="border-t hover:bg-muted/50">
                 <td className="px-4 py-3 text-sm">{user.phone}</td>
                 <td className="px-4 py-3 text-sm">
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      user.isAdmin
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                  <Badge
+                    variant={user.isAdmin ? "default" : "secondary"}
                   >
                     {user.isAdmin ? "管理员" : "普通用户"}
-                  </span>
+                  </Badge>
                 </td>
                 <td className="px-4 py-3 text-sm">
                   {user.memberships.length > 0
                     ? user.memberships.map((m) => m.group.name).join(", ")
                     : "-"}
                 </td>
-                <td className="px-4 py-3 text-sm text-gray-500">
+                <td className="px-4 py-3 text-sm text-muted-foreground">
                   {new Date(user.createdAt).toLocaleDateString("zh-CN")}
                 </td>
               </tr>

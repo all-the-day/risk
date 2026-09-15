@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 interface CheckinRecord {
   id: string;
@@ -48,65 +50,58 @@ export default function CheckinsClient({
   return (
     <div>
       <div className="flex items-center gap-3 mb-4">
-        <input
+        <Input
           type="date"
           value={date}
           onChange={(e) => loadDate(e.target.value)}
-          className="px-3 py-2 border rounded"
+          className="w-44"
         />
         {error && (
-          <span className="text-sm text-red-500">{error}</span>
+          <span className="text-sm text-destructive">{error}</span>
         )}
       </div>
 
       {loading ? (
-        <p className="text-gray-500">加载中...</p>
+        <p className="text-muted-foreground">加载中...</p>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="rounded-lg border overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   用户
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   事项
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   类型
                 </th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500">
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                   打卡时间
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody>
               {checkins.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={4}
-                    className="px-4 py-8 text-center text-gray-400"
-                  >
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                     当日无打卡记录
                   </td>
                 </tr>
               ) : (
                 checkins.map((c) => (
-                  <tr key={c.id} className="hover:bg-gray-50">
+                  <tr key={c.id} className="border-t hover:bg-muted/50">
                     <td className="px-4 py-3 text-sm">{c.user.phone}</td>
                     <td className="px-4 py-3 text-sm">{c.task.title}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${
-                          c.task.type === "group"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-500"
-                        }`}
+                      <Badge
+                        variant={c.task.type === "group" ? "default" : "secondary"}
                       >
                         {c.task.type === "group" ? "团体" : "个人"}
-                      </span>
+                      </Badge>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm text-muted-foreground">
                       {new Date(c.checkedAt).toLocaleTimeString("zh-CN")}
                     </td>
                   </tr>

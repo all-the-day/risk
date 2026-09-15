@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function JoinPage() {
   const router = useRouter();
@@ -73,105 +77,87 @@ export default function JoinPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">加入团体</h1>
 
-        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-          <button
-            onClick={() => setMode("join")}
-            className={`flex-1 py-2 rounded-md text-sm font-medium ${
-              mode === "join" ? "bg-white shadow" : "text-gray-500"
-            }`}
-          >
-            加入团体
-          </button>
-          <button
-            onClick={() => setMode("create")}
-            className={`flex-1 py-2 rounded-md text-sm font-medium ${
-              mode === "create" ? "bg-white shadow" : "text-gray-500"
-            }`}
-          >
-            创建团体
-          </button>
-        </div>
+        <Tabs
+          value={mode}
+          onValueChange={(v) => {
+            setMode(v as "join" | "create");
+            setError("");
+          }}
+          className="mb-6"
+        >
+          <TabsList className="w-full">
+            <TabsTrigger value="join">加入团体</TabsTrigger>
+            <TabsTrigger value="create">创建团体</TabsTrigger>
+          </TabsList>
 
-        {mode === "join" ? (
-          <form onSubmit={handleJoin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                团内昵称
-              </label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="其他成员看到的名字"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                邀请码
-              </label>
-              <input
-                type="text"
-                value={inviteCode}
-                onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-center text-lg tracking-widest"
-                placeholder="输入6位邀请码"
-                maxLength={6}
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? "加入中..." : "加入团体"}
-            </button>
-          </form>
-        ) : (
-          <form onSubmit={handleCreate} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                团内昵称
-              </label>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="其他成员看到的名字"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                团体名称
-              </label>
-              <input
-                type="text"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="给团体起个名字"
-                required
-              />
-            </div>
-            {error && (
-              <p className="text-red-500 text-sm text-center">{error}</p>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
-            >
-              {loading ? "创建中..." : "创建团体"}
-            </button>
-          </form>
-        )}
+          <TabsContent value="join">
+            <form onSubmit={handleJoin} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="join-nickname">团内昵称</Label>
+                <Input
+                  id="join-nickname"
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="其他成员看到的名字"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="inviteCode">邀请码</Label>
+                <Input
+                  id="inviteCode"
+                  type="text"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  className="font-mono text-center text-lg tracking-widest"
+                  placeholder="输入6位邀请码"
+                  maxLength={6}
+                  required
+                />
+              </div>
+              {error && (
+                <p className="text-destructive text-sm text-center">{error}</p>
+              )}
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "加入中..." : "加入团体"}
+              </Button>
+            </form>
+          </TabsContent>
+
+          <TabsContent value="create">
+            <form onSubmit={handleCreate} className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <Label htmlFor="create-nickname">团内昵称</Label>
+                <Input
+                  id="create-nickname"
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  placeholder="其他成员看到的名字"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="groupName">团体名称</Label>
+                <Input
+                  id="groupName"
+                  type="text"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  placeholder="给团体起个名字"
+                  required
+                />
+              </div>
+              {error && (
+                <p className="text-destructive text-sm text-center">{error}</p>
+              )}
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? "创建中..." : "创建团体"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

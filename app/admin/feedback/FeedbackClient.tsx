@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface FeedbackRecord {
   id: string;
@@ -98,7 +101,7 @@ ${feedback.content}
   return (
     <div>
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded p-3 text-sm text-red-700 mb-4">
+        <div className="bg-destructive/10 border border-destructive/20 rounded p-3 text-sm text-destructive mb-4">
           {error}
         </div>
       )}
@@ -106,94 +109,80 @@ ${feedback.content}
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-2">
           {(["all", "pending", "resolved"] as const).map((s) => (
-            <button
+            <Button
               key={s}
+              variant={filter === s ? "default" : "outline"}
+              size="sm"
               onClick={() => setFilter(s)}
-              className={`px-3 py-1 rounded text-sm ${
-                filter === s
-                  ? "bg-blue-500 text-white"
-                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-              }`}
             >
               {s === "all" ? "全部" : s === "pending" ? "待处理" : "已处理"}
-            </button>
+            </Button>
           ))}
         </div>
-        <button
-          onClick={exportJSON}
-          className="px-4 py-1 bg-gray-200 text-gray-700 rounded text-sm hover:bg-gray-300"
-        >
+        <Button variant="outline" size="sm" onClick={exportJSON}>
           导出 JSON
-        </button>
+        </Button>
       </div>
 
       <div className="space-y-3">
         {filtered.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-400">
-            暂无反馈
-          </div>
+          <Card>
+            <CardContent className="p-6 text-center text-muted-foreground">
+              暂无反馈
+            </CardContent>
+          </Card>
         ) : (
           filtered.map((f) => (
-            <div key={f.id} className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      f.type === "bug"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-blue-100 text-blue-700"
-                    }`}
-                  >
-                    {f.type === "bug" ? "Bug" : "建议"}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs ${
-                      f.status === "pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {f.status === "pending" ? "待处理" : "已处理"}
+            <Card key={f.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={f.type === "bug" ? "destructive" : "default"}
+                    >
+                      {f.type === "bug" ? "Bug" : "建议"}
+                    </Badge>
+                    <Badge
+                      variant={f.status === "pending" ? "secondary" : "outline"}
+                    >
+                      {f.status === "pending" ? "待处理" : "已处理"}
+                    </Badge>
+                  </div>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(f.createdAt).toLocaleString("zh-CN")}
                   </span>
                 </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(f.createdAt).toLocaleString("zh-CN")}
-                </span>
-              </div>
-              <p className="text-sm text-gray-800 mb-3">{f.content}</p>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400">
-                  提交者: {f.user.phone}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => copyPrompt(f)}
-                    className={`px-3 py-1 rounded text-xs ${
-                      copiedId === f.id
-                        ? "bg-green-500 text-white"
-                        : "bg-blue-500 text-white hover:bg-blue-600"
-                    }`}
-                  >
-                    {copiedId === f.id ? "已复制" : "复制 Prompt"}
-                  </button>
-                  <button
-                    onClick={() =>
-                      updateStatus(
-                        f.id,
-                        f.status === "pending" ? "resolved" : "pending"
-                      )
-                    }
-                    className={`px-3 py-1 rounded text-xs ${
-                      f.status === "pending"
-                        ? "bg-green-500 text-white hover:bg-green-600"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    {f.status === "pending" ? "标记已处理" : "标记待处理"}
-                  </button>
+                <p className="text-sm mb-3">{f.content}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    提交者: {f.user.phone}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={copiedId === f.id ? "default" : "outline"}
+                      onClick={() => copyPrompt(f)}
+                    >
+                      {copiedId === f.id ? "已复制" : "复制 Prompt"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={
+                        f.status === "pending" ? "default" : "outline"
+                      }
+                      onClick={() =>
+                        updateStatus(
+                          f.id,
+                          f.status === "pending" ? "resolved" : "pending"
+                        )
+                      }
+                    >
+                      {f.status === "pending" ? "标记已处理" : "标记待处理"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))
         )}
       </div>
