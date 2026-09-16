@@ -22,19 +22,20 @@ type ItemDef = {
 };
 
 // 叶子项合计必须等于模板 maxScore（周表分母）
+// 次数口径来自纸质「团体操练表」：CX 与 追求 一周三次算满分，团体DG 一周至少一次
 const ITEM_DEFS: ItemDef[] = [
-  { key: "cx", name: "CX", fullName: "晨兴", score: 6, checksPerWeek: 6, order: 1 },
-  { key: "pursuit", name: "追求", fullName: "追求", score: 6, checksPerWeek: 6, order: 2 },
+  { key: "cx", name: "CX", fullName: "晨兴", score: 6, checksPerWeek: 3, order: 1 },
+  { key: "pursuit", name: "追求", fullName: "追求", score: 6, checksPerWeek: 3, order: 2 },
   // 父项：分值 = 子项之和，本身不参与打卡与计分
   { key: "gathering", name: "聚会", fullName: "聚会", score: 14, checksPerWeek: 1, order: 3 },
   { key: "xp", name: "XP", fullName: "擘饼", score: 7, checksPerWeek: 1, order: 1, parent: "gathering" },
   { key: "zr", name: "ZR", fullName: "主日", score: 7, checksPerWeek: 1, order: 2, parent: "gathering" },
-  { key: "dg", name: "团体DG", fullName: "团体祷告", score: 6, checksPerWeek: 6, order: 4 },
+  { key: "dg", name: "团体DG", fullName: "团体祷告", score: 6, checksPerWeek: 1, order: 4 },
   {
     key: "gospel",
     name: "Gospel",
     fullName: "福音",
-    score: 3,
+    score: 4,
     checksPerWeek: 1,
     order: 1,
     category: CATEGORY_JGY,
@@ -43,7 +44,7 @@ const ITEM_DEFS: ItemDef[] = [
     key: "hygiene",
     name: "卫生",
     fullName: "卫生",
-    score: 6,
+    score: 4,
     checksPerWeek: 1,
     order: 2,
     category: CATEGORY_JGY,
@@ -58,9 +59,9 @@ const ITEM_DEFS: ItemDef[] = [
     category: CATEGORY_JGY,
   },
   {
-    key: "offering",
-    name: "主日奉献",
-    fullName: "主日奉献",
+    key: "memorize",
+    name: "背经",
+    fullName: "背经",
     score: 4,
     checksPerWeek: 1,
     order: 4,

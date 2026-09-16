@@ -125,7 +125,7 @@ async function run() {
     await page.goto(`${BASE_URL}/report`);
     await page.waitForLoadState('networkidle');
     const body = await page.textContent('body');
-    for (const token of ['周表', '本家本周得分', '潘SY', '徐L', '满分 51/人']) {
+    for (const token of ['周表', '本家本周得分', '潘SY', '徐L', '满分 50/人']) {
       if (!body.includes(token)) throw new Error(`未找到「${token}」`);
     }
     const match = body.match(/本家本周得分\s*(\d+)\s*\/\s*(\d+)/);
