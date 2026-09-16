@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import WeekPicker from "@/components/WeekPicker";
 import MemberCards from "./MemberCards";
+import MemberChart from "./MemberChart";
 import MemberTable from "./MemberTable";
 import { formatWeekLabel } from "@/lib/date";
 import { percent } from "@/lib/score";
@@ -17,13 +17,20 @@ interface ReportClientProps {
   maxScore: number;
 }
 
+const VIEWS: { value: "cards" | "chart" | "table"; label: string }[] = [
+  { value: "cards", label: "成员" },
+  { value: "chart", label: "图表" },
+  { value: "table", label: "表格" },
+];
+
 export default function ReportClient({
   weeks,
   members,
   maxScore,
 }: ReportClientProps) {
   const [selected, setSelected] = useState<string[]>([weeks[weeks.length - 1]]);
-  const [view, setView] = useState<"cards" | "table">("cards");
+  const [view, setView] = useState<"cards" | "chart" | "table">("cards");
+  const [chartType, setChartType] = useState<"bar" | "line">("bar");
 
   const orderedSelected = weeks.filter((week) => selected.includes(week));
   const currentWeek = orderedSelected[orderedSelected.length - 1];
@@ -89,27 +96,71 @@ export default function ReportClient({
         </CardContent>
       </Card>
 
-      <div className="mb-3 flex items-center justify-between">
-        <span className="text-sm font-medium">
-          {view === "cards" ? "成员" : "本家表格"}
-        </span>
-        <Button
-          variant="outline"
-          size="xs"
-          onClick={() => setView(view === "cards" ? "table" : "cards")}
-        >
-          {view === "cards" ? "切换表格视图" : "切换卡片视图"}
-        </Button>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <div className="flex gap-0.5 rounded-lg bg-muted p-1">
+          {VIEWS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setView(option.value)}
+              aria-pressed={view === option.value}
+              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
+                view === option.value
+                  ? "bg-card font-medium text-foreground"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+
+        {view === "chart" && (
+          <div className="flex gap-0.5 rounded-lg bg-muted p-1">
+            {(["bar", "line"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setChartType(option)}
+                aria-pressed={chartType === option}
+                className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
+                  chartType === option
+                    ? "bg-card font-medium text-foreground"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {option === "bar" ? "柱状" : "折线"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {view === "cards" ? (
+      {view === "chart" && orderedSelected.length === 1 && (
+        <p className="mb-2 text-xs text-muted-foreground">
+          多选几个周次，就能看出趋势
+        </p>
+      )}
+
+      {view === "cards" && (
         <MemberCards
           members={members}
           weeks={orderedSelected}
           currentWeek={currentWeek}
           maxScore={maxScore}
         />
-      ) : (
+      )}
+
+      {view === "chart" && (
+        <MemberChart
+          members={members}
+          weeks={orderedSelected}
+          maxScore={maxScore}
+          type={chartType}
+        />
+      )}
+
+      {view === "table" && (
         <MemberTable
           members={members}
           weeks={orderedSelected}

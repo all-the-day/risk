@@ -68,6 +68,18 @@ async function run() {
 
   let toggledItemId = null;
 
+  // 等某项的按钮变成期望状态（避免用固定 sleep 猜编译/网络耗时）
+  async function waitLabel(itemId, label) {
+    await page.waitForFunction(
+      ([id, want]) => {
+        const el = document.querySelector(`button[data-item-id="${id}"]`);
+        return el?.getAttribute('aria-label') === want;
+      },
+      [itemId, label],
+      { timeout: 20000 }
+    );
+  }
+
   await test('4. 打卡一项并刷新后保持', async () => {
     const button = page.locator('button[aria-label="打卡"]').first();
     toggledItemId = await button.getAttribute('data-item-id');
@@ -75,7 +87,7 @@ async function run() {
 
     const before = await page.locator('button[aria-label="取消打卡"]').count();
     await button.click();
-    await page.waitForTimeout(900);
+    await waitLabel(toggledItemId, '取消打卡');
     const after = await page.locator('button[aria-label="取消打卡"]').count();
     if (after !== before + 1) throw new Error(`打卡后已打卡数 ${before} → ${after}，没加 1`);
 
@@ -92,7 +104,7 @@ async function run() {
     }
     const before = await page.locator('button[aria-label="取消打卡"]').count();
     await button.click();
-    await page.waitForTimeout(900);
+    await waitLabel(toggledItemId, '打卡');
     const after = await page.locator('button[aria-label="取消打卡"]').count();
     if (after !== before - 1) throw new Error(`取消后 ${before} → ${after}，没减 1`);
   });
@@ -118,14 +130,23 @@ async function run() {
     if (trends < 1) throw new Error('多选后未出现趋势图');
   });
 
-  await test('8. 切换表格视图且姓名列固定', async () => {
-    await page.click('text=切换表格视图');
-    await page.waitForTimeout(400);
+  await test('8. 三种视图与柱状/折线切换', async () => {
+    await page.getByRole('button', { name: '表格' }).click();
+    await page.waitForTimeout(300);
     if ((await page.locator('table').count()) === 0) throw new Error('未切换到表格视图');
     if ((await page.locator('td.sticky').count()) === 0) throw new Error('表格里没有固定列');
-    const body = await page.textContent('body');
-    if (!body.includes('本家合计')) throw new Error('表格缺少合计行');
-    await page.click('text=切换卡片视图');
+    if (!(await page.textContent('body')).includes('本家合计')) throw new Error('表格缺少合计行');
+
+    await page.getByRole('button', { name: '图表' }).click();
+    await page.waitForTimeout(300);
+    if ((await page.locator('svg').count()) === 0) throw new Error('未渲染图表');
+    if ((await page.locator('svg rect').count()) === 0) throw new Error('柱状图没有柱子');
+
+    await page.getByRole('button', { name: '折线' }).click();
+    await page.waitForTimeout(300);
+    if ((await page.locator('polyline').count()) === 0) throw new Error('折线模式没有折线');
+
+    await page.getByRole('button', { name: '成员' }).click();
     await page.waitForTimeout(300);
   });
 
