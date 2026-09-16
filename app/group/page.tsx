@@ -19,19 +19,11 @@ export default async function GroupPage() {
   );
 
   return (
-    <div className="min-h-screen pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold">{membership.group.name}</h1>
-          <p className="text-sm text-muted-foreground">
-            {status ? `${status.members.length} 人 · 每日 ${status.total} 项` : "暂无事项模板"}
-          </p>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-6">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="max-w-md mx-auto px-4 pt-8 pb-6">
         {status ? (
           <GroupClient
+            groupName={membership.group.name}
             members={status.members}
             total={status.total}
             allDone={status.allDone}

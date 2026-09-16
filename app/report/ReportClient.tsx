@@ -12,6 +12,7 @@ import { percent } from "@/lib/score";
 import type { MemberWeekRow } from "@/services/weekly-score";
 
 interface ReportClientProps {
+  groupName: string;
   weeks: string[];
   members: MemberWeekRow[];
   maxScore: number;
@@ -24,6 +25,7 @@ const VIEWS: { value: "cards" | "chart" | "table"; label: string }[] = [
 ];
 
 export default function ReportClient({
+  groupName,
   weeks,
   members,
   maxScore,
@@ -56,11 +58,9 @@ export default function ReportClient({
 
   return (
     <>
-      <div className="mb-3">
+      <div className="mb-2 flex items-baseline gap-2">
         <h2 className="text-sm font-medium">选择周次</h2>
-        <p className="text-xs text-muted-foreground">
-          可多选，多选后每位成员会显示趋势
-        </p>
+        <span className="text-xs text-muted-foreground">可多选</span>
       </div>
       <WeekPicker weeks={weeks} selected={orderedSelected} onToggle={toggleWeek} />
 
@@ -91,7 +91,7 @@ export default function ReportClient({
             />
           </div>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            {formatWeekLabel(currentWeek)}　·　满分 {maxScore}/人
+            {groupName} · {formatWeekLabel(currentWeek)} · 满分 {maxScore}/人
           </p>
         </CardContent>
       </Card>

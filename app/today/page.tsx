@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { getTodayString, formatDisplayDate } from "@/lib/date";
+import { getTodayString } from "@/lib/date";
 import { getDailyChecklist } from "@/services/activity";
 import TodayClient from "./TodayClient";
 
@@ -12,18 +12,10 @@ export default async function TodayPage() {
   }
 
   const checklist = await getDailyChecklist(user.id, getTodayString());
-  const displayDate = formatDisplayDate(new Date());
 
   return (
-    <div className="min-h-screen pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <p className="text-sm text-muted-foreground">{displayDate}</p>
-          <h1 className="text-xl font-bold">今日功课</h1>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-6">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="max-w-md mx-auto px-4 pt-8 pb-6">
         {checklist ? (
           <TodayClient
             rows={checklist.rows}

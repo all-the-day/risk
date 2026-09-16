@@ -15,20 +15,11 @@ export default async function ReportPage() {
   const table = await getWeeklyTable(membership.groupId, getRecentWeeks(8));
 
   return (
-    <div className="min-h-screen pb-20">
-      <header className="bg-card border-b px-4 py-4">
-        <div className="max-w-md mx-auto">
-          <h1 className="text-xl font-bold">周表</h1>
-          <p className="text-sm text-muted-foreground">
-            {membership.group.name}
-            {table ? ` · ${table.templateName}` : ""}
-          </p>
-        </div>
-      </header>
-
-      <main className="max-w-md mx-auto px-4 py-6">
+    <div className="min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))]">
+      <main className="max-w-md mx-auto px-4 pt-8 pb-6">
         {table ? (
           <ReportClient
+            groupName={membership.group.name}
             weeks={table.weeks}
             members={table.members}
             maxScore={table.maxScore}
