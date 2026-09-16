@@ -20,7 +20,7 @@ export default async function AdminUsersPage() {
           <thead className="bg-muted/50">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
-                手机号
+                昵称
               </th>
               <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">
                 角色
@@ -36,7 +36,7 @@ export default async function AdminUsersPage() {
           <tbody>
             {users.map((user) => (
               <tr key={user.id} className="border-t hover:bg-muted/50">
-                <td className="px-4 py-3 text-sm">{user.phone}</td>
+                <td className="px-4 py-3 text-sm">{user.nickname}</td>
                 <td className="px-4 py-3 text-sm">
                   <Badge
                     variant={user.isAdmin ? "default" : "secondary"}

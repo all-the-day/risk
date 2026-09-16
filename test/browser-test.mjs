@@ -6,8 +6,8 @@
 import { chromium } from 'playwright';
 
 const BASE_URL = 'http://localhost:3000';
-const MEMBER = { phone: '13800000001', password: '123456' };
-const ADMIN = { phone: 'admin', password: 'admin123' };
+const MEMBER = { nickname: '潘SY', password: '123456' };
+const ADMIN = { nickname: 'admin', password: 'admin123' };
 const LEAF_COUNT = 9; // 周评模板的叶子项数量（可打卡、可计分）
 
 const results = [];
@@ -23,9 +23,9 @@ async function test(name, fn) {
   }
 }
 
-async function login(page, { phone, password }) {
+async function login(page, { nickname, password }) {
   await page.goto(`${BASE_URL}/login`);
-  await page.fill('input[type="tel"]', phone);
+  await page.fill('input#nickname', nickname);
   await page.fill('input[type="password"]', password);
   await page.click('button[type="submit"]');
   await page.waitForLoadState('networkidle');

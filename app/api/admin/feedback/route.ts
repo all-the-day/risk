@@ -19,7 +19,7 @@ export async function GET() {
 
     const feedbacks = await prisma.feedback.findMany({
       include: {
-        user: { select: { phone: true } },
+        user: { select: { nickname: true } },
       },
       orderBy: { createdAt: "desc" },
     });

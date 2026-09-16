@@ -83,6 +83,8 @@ ActivityTemplate ─┬─ ActivityCategory
 
 JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`lib/auth.ts`**：`createSession` / `getSession` / `deleteSession` / `getCurrentUser` / `requireUser`（未登录跳 `/login`）/ `requireAdmin`（非管理员跳 `/today`）。
 
+登录账号是 `User.nickname`（唯一），界面一律用「昵称」；手机号格式的输入会被 `lib/nickname.ts` 的 `validateNickname` 拒绝（登录与注册接口都会校验）。
+
 注意：`requireUser` / `requireAdmin` 内部用 `redirect()`，**只适合页面**；Route Handler 里要自己查 `getSession()` + `user.isAdmin` 返回 401/403。
 
 ## Route structure

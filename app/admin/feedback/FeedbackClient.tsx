@@ -11,7 +11,7 @@ interface FeedbackRecord {
   content: string;
   status: string;
   createdAt: Date;
-  user: { phone: string };
+  user: { nickname: string };
 }
 
 export default function FeedbackClient({
@@ -79,7 +79,7 @@ ${feedback.content}
       content: f.content,
       status: f.status,
       createdAt: f.createdAt.toISOString(),
-      userPhone: f.user.phone,
+      nickname: f.user.nickname,
     }));
 
     const blob = new Blob([JSON.stringify(data, null, 2)], {
@@ -155,7 +155,7 @@ ${feedback.content}
                 <p className="text-sm mb-3">{f.content}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-muted-foreground">
-                    提交者: {f.user.phone}
+                    提交者: {f.user.nickname}
                   </span>
                   <div className="flex items-center gap-2">
                     <Button

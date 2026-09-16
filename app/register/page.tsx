@@ -6,10 +6,11 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { validateNickname } from "@/lib/nickname";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [phone, setPhone] = useState("");
+  const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -18,6 +19,12 @@ export default function RegisterPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const nicknameError = validateNickname(nickname);
+    if (nicknameError) {
+      setError(nicknameError);
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("两次密码不一致");
@@ -36,7 +43,7 @@ export default function RegisterPage() {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ nickname, password }),
       });
 
       const data = await res.json();
@@ -61,15 +68,19 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold text-center mb-8">注册账号</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="phone">手机号</Label>
+            <Label htmlFor="nickname">昵称</Label>
             <Input
-              id="phone"
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="请输入手机号"
+              id="nickname"
+              type="text"
+              autoComplete="username"
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+              placeholder="请输入昵称"
               required
             />
+            <p className="text-xs text-muted-foreground">
+              用昵称注册，请不要使用手机号
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">密码</Label>

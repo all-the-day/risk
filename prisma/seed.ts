@@ -3,7 +3,7 @@ import { hash } from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const ADMIN_PHONE = "admin";
+const ADMIN_NICKNAME = "admin";
 const ADMIN_PASSWORD = "admin123";
 
 const TEMPLATE_NAME = "周评";
@@ -70,17 +70,19 @@ const ITEM_DEFS: ItemDef[] = [
 
 async function seedAdmin() {
   const password = await hash(ADMIN_PASSWORD, 12);
-  const existed = await prisma.user.findUnique({ where: { phone: ADMIN_PHONE } });
+  const existed = await prisma.user.findUnique({
+    where: { nickname: ADMIN_NICKNAME },
+  });
 
   if (existed) {
-    console.log(`管理员已存在：${ADMIN_PHONE}`);
+    console.log(`管理员已存在：${ADMIN_NICKNAME}`);
     return;
   }
 
   await prisma.user.create({
-    data: { phone: ADMIN_PHONE, password, isAdmin: true },
+    data: { nickname: ADMIN_NICKNAME, password, isAdmin: true },
   });
-  console.log(`管理员已创建：${ADMIN_PHONE} / ${ADMIN_PASSWORD}`);
+  console.log(`管理员已创建：${ADMIN_NICKNAME} / ${ADMIN_PASSWORD}`);
 }
 
 async function seedTemplate() {

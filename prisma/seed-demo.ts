@@ -13,13 +13,13 @@ const GROUP_NAME = "风起之家";
 const DEMO_PASSWORD = "123456";
 const WEEKS_BACK = 3;
 
-// 姓名 + 手机号 + 每日类事项的打卡日（0=周日…6=周六）+ 每周一次类事项少做几项
+// 昵称（同时用作登录账号）+ 每日类事项的打卡日（0=周日…6=周六）+ 每周一次类事项少做几项
 const MEMBERS = [
-  { nickname: "潘SY", phone: "13800000001", days: [0, 1, 2, 3, 4, 5, 6], weeklySkip: 0 },
-  { nickname: "徐L", phone: "13800000002", days: [0, 1, 2, 3, 4, 5], weeklySkip: 0 },
-  { nickname: "X娟", phone: "13800000003", days: [1, 3, 5], weeklySkip: 2 },
-  { nickname: "YS晨", phone: "13800000004", days: [0, 2, 4, 6], weeklySkip: 1 },
-  { nickname: "林YX", phone: "13800000005", days: [0, 1, 2, 3, 4, 6], weeklySkip: 0 },
+  { nickname: "潘SY", days: [0, 1, 2, 3, 4, 5, 6], weeklySkip: 0 },
+  { nickname: "徐L", days: [0, 1, 2, 3, 4, 5], weeklySkip: 0 },
+  { nickname: "X娟", days: [1, 3, 5], weeklySkip: 2 },
+  { nickname: "YS晨", days: [0, 2, 4, 6], weeklySkip: 1 },
+  { nickname: "林YX", days: [0, 1, 2, 3, 4, 6], weeklySkip: 0 },
 ];
 
 function weekStartOf(date: Date): string {
@@ -54,8 +54,8 @@ async function main() {
   const weeklyItems = leaves.filter((i) => i.checksPerWeek <= 1);
 
   // 重置演示数据
-  const phones = MEMBERS.map((m) => m.phone);
-  await prisma.user.deleteMany({ where: { phone: { in: phones } } });
+  const nicknames = MEMBERS.map((m) => m.nickname);
+  await prisma.user.deleteMany({ where: { nickname: { in: nicknames } } });
   await prisma.group.deleteMany({ where: { name: GROUP_NAME } });
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -74,7 +74,7 @@ async function main() {
 
   for (const member of MEMBERS) {
     const user = await prisma.user.create({
-      data: { phone: member.phone, password },
+      data: { nickname: member.nickname, password },
     });
     await prisma.groupMember.create({
       data: { userId: user.id, groupId: group.id, nickname: member.nickname },
@@ -111,7 +111,7 @@ async function main() {
 
   // 一条管理员录入的周分：用于验证"管理员优先 + 已锁定"（X娟自打卡偏低，管理员给她补到 33）
   const xjuan = await prisma.user.findUnique({
-    where: { phone: "13800000003" },
+    where: { nickname: "X娟" },
   });
   await prisma.weeklyScore.create({
     data: {
@@ -126,7 +126,7 @@ async function main() {
     `演示数据完成：${GROUP_NAME}（邀请码 ${group.inviteCode}）·${MEMBERS.length} 人 · ${leaves.length} 项 · ${weeks.length} 周记录`
   );
   console.log(
-    `登录示例：${MEMBERS[0].phone} / ${DEMO_PASSWORD}（管理员 admin / admin123）`
+    `登录示例（用昵称，不要用手机号）：${MEMBERS[0].nickname} / ${DEMO_PASSWORD}（管理员 admin / admin123）`
   );
 }
 

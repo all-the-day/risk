@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id        String   @id @default(cuid())
-  phone     String   @unique
+  nickname  String   @unique
   password  String
   isAdmin   Boolean  @default(false)
   createdAt DateTime @default(now())

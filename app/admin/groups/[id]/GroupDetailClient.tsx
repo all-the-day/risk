@@ -15,7 +15,7 @@ interface GroupData {
     id: string;
     nickname: string;
     joinedAt: Date;
-    user: { phone: string };
+    user: { nickname: string };
   }[];
 }
 
@@ -97,7 +97,7 @@ export default function GroupDetailClient({ group }: { group: GroupData }) {
                 <div>
                   <p className="text-sm font-medium">{member.nickname}</p>
                   <p className="text-xs text-muted-foreground">
-                    {member.user.phone}
+                    {member.user.nickname}
                   </p>
                 </div>
                 <Button
