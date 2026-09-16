@@ -6,7 +6,14 @@ export async function POST(request: Request) {
   try {
     const { nickname, password } = await request.json();
 
-    if (!nickname || !password) {
+    // 类型守卫：非字符串（如数字手机号）一律按"缺失"处理，
+    // 避免 value.trim / bcrypt 抛出的内部错误原文被回给客户端
+    if (
+      typeof nickname !== "string" ||
+      typeof password !== "string" ||
+      !nickname ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "请输入昵称和密码" },
         { status: 400 }

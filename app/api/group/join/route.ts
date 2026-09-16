@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getGroupByInviteCode, joinGroup } from "@/db/group";
+import { isPhoneLike, PHONE_HINT } from "@/lib/nickname";
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +18,10 @@ export async function POST(request: Request) {
         { error: "请输入昵称和邀请码" },
         { status: 400 }
       );
+    }
+
+    if (typeof nickname === "string" && isPhoneLike(nickname)) {
+      return NextResponse.json({ error: PHONE_HINT }, { status: 400 });
     }
 
     const group = await getGroupByInviteCode(inviteCode);

@@ -80,33 +80,45 @@ async function run() {
     );
   }
 
-  await test('4. 打卡一项并刷新后保持', async () => {
+  // 打卡 + 取消合并成一项：无论中间哪步失败，finally 都要把状态还原，
+  // 否则会在演示库里留下脏记录（seed-demo 只会在周日生成 checksPerWeek=1 的记录）。
+  await test('4. 打卡与取消（失败也会回滚）', async () => {
     const button = page.locator('button[aria-label="打卡"]').first();
     toggledItemId = await button.getAttribute('data-item-id');
     if (!toggledItemId) throw new Error('打卡按钮缺少 data-item-id');
 
     const before = await page.locator('button[aria-label="取消打卡"]').count();
-    await button.click();
-    await waitLabel(toggledItemId, '取消打卡');
-    const after = await page.locator('button[aria-label="取消打卡"]').count();
-    if (after !== before + 1) throw new Error(`打卡后已打卡数 ${before} → ${after}，没加 1`);
+    try {
+      await button.click();
+      await waitLabel(toggledItemId, '取消打卡');
+      const after = await page.locator('button[aria-label="取消打卡"]').count();
+      if (after !== before + 1) throw new Error(`打卡后已打卡数 ${before} → ${after}，没加 1`);
 
-    await page.reload();
-    await page.waitForLoadState('networkidle');
-    const reloaded = await page.locator('button[aria-label="取消打卡"]').count();
-    if (reloaded !== after) throw new Error(`刷新后已打卡数变成 ${reloaded}，原为 ${after}`);
-  });
+      await page.reload();
+      await page.waitForLoadState('networkidle');
+      const reloaded = await page.locator('button[aria-label="取消打卡"]').count();
+      if (reloaded !== after) throw new Error(`刷新后已打卡数变成 ${reloaded}，原为 ${after}`);
 
-  await test('5. 取消打卡可回退（状态还原）', async () => {
-    const button = page.locator(`button[data-item-id="${toggledItemId}"]`);
-    if ((await button.getAttribute('aria-label')) !== '取消打卡') {
-      throw new Error('该项不是已打卡状态');
+      await page.locator(`button[data-item-id="${toggledItemId}"]`).click();
+      await waitLabel(toggledItemId, '打卡');
+      const reverted = await page.locator('button[aria-label="取消打卡"]').count();
+      if (reverted !== before) {
+        throw new Error(`取消后已打卡数 ${after} → ${reverted}，应回到 ${before}`);
+      }
+    } finally {
+      const current = page.locator(`button[data-item-id="${toggledItemId}"]`);
+      if (
+        (await current.count()) > 0 &&
+        (await current.getAttribute('aria-label')) === '取消打卡'
+      ) {
+        try {
+          await current.click();
+          await waitLabel(toggledItemId, '打卡');
+        } catch (e) {
+          console.log(`   ⚠ 回滚未完成，演示库可能残留 1 条打卡记录：${e.message}`);
+        }
+      }
     }
-    const before = await page.locator('button[aria-label="取消打卡"]').count();
-    await button.click();
-    await waitLabel(toggledItemId, '打卡');
-    const after = await page.locator('button[aria-label="取消打卡"]').count();
-    if (after !== before - 1) throw new Error(`取消后 ${before} → ${after}，没减 1`);
   });
 
   await test('6. 报告页显示本家周表', async () => {

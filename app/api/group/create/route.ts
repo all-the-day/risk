@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { createGroup, joinGroup, getGroupByInviteCode } from "@/db/group";
 import { generateInviteCode } from "@/lib/utils";
+import { isPhoneLike, PHONE_HINT } from "@/lib/nickname";
 
 export async function POST(request: Request) {
   try {
@@ -17,6 +18,10 @@ export async function POST(request: Request) {
         { error: "请输入团体名称和昵称" },
         { status: 400 }
       );
+    }
+
+    if (typeof nickname === "string" && isPhoneLike(nickname)) {
+      return NextResponse.json({ error: PHONE_HINT }, { status: 400 });
     }
 
     let inviteCode: string = "";
