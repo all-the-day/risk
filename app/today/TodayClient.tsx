@@ -54,21 +54,23 @@ export default function TodayClient({
       <section className="mb-6">
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-2">
               <h2 className="text-lg font-semibold">今日事项</h2>
-              <div className="flex items-center gap-2">
-                <div className="w-16 bg-muted rounded-full h-1.5">
-                  <div
-                    className={`h-1.5 rounded-full transition-all ${
-                      allDone ? "bg-success-foreground" : "bg-primary"
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <Badge variant="secondary" className="text-[11px]">
-                  {done}/{total}
-                </Badge>
-              </div>
+              <Badge
+                variant={allDone ? "default" : "secondary"}
+                className={allDone ? "bg-success text-success-foreground" : ""}
+              >
+                {done}/{total}
+              </Badge>
+            </div>
+
+            <div className="mb-3 h-1.5 w-full rounded-full bg-muted">
+              <div
+                className={`h-1.5 rounded-full transition-all ${
+                  allDone ? "bg-success-foreground" : "bg-primary"
+                }`}
+                style={{ width: `${pct}%` }}
+              />
             </div>
 
             {error && (
