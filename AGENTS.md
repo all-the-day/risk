@@ -39,7 +39,13 @@ node test/browser-test.mjs  # 登录 → 打卡 → 报告页 → 后台录入�
 
 ## Deploy
 
-**构建在 GitHub Actions 完成，生产服务器只接收 `.next/standalone` 产物**（push `main` 自动部署）。服务器只有 1.6G 内存且与其它应用共享，**永远不要在那台机器上跑 `npm ci` / `npm run build`**，会 OOM 拖死整机（2026-09-16 连续死机两次）。产物路径、目录布局、一次性初始化与回滚见 `deploy/README.md`。
+**构建在 GitHub Actions 完成，生产服务器只接收 `.next/standalone` 产物**（push `main` 自动部署）。服务器只有 1.6G 内存且与其它应用共享，**永远不要在那台机器上跑 `npm ci` / `npm run build`**，会 OOM 拖死整机（2026-09-16 连续死机两次）。产物路径、目录布局、一次性初始化与回滚见 `deploy/README.md`；相关文件是 `.github/workflows/deploy.yml` + `deploy/`。
+
+改代码时注意三点：
+
+- `next.config.js` 的 `output: "standalone"` 与 `outputFileTracingIncludes` 是部署依赖，**别当冗余删掉**。尤其 `node_modules/bcryptjs/**/*` 那条：bcryptjs 在应用里被打进 chunk，但线上 `prisma/seed.cjs` 要 `require` 它，删了建库脚本就跑不起来。
+- 线上库是 `file:/var/www/rike/data/prod.db`（绝对路径，在代码目录之外，部署不会碰它）；本地开发仍是 `file:./dev.db`（解析为 `prisma/dev.db`）。
+- `prisma/schema.sql` 与 `prisma/seed.cjs` 是 CI 生成的中间产物，**不在仓库里**，别去找；改 schema 后线上要 `bash /var/www/rike/shared/db-init.sh --force`（会清库）。
 
 ## Architecture
 

@@ -4,6 +4,8 @@ name: Deploy
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "**.md" # 纯文档改动不必重新部署
   workflow_dispatch:
 
 concurrency:
