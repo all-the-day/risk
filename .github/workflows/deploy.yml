@@ -1,0 +1,97 @@
+name: Deploy
+
+# 构建在 GitHub Actions 上完成，生产服务器只接收产物（该机只有 1.6G 内存，跑不动 npm ci / next build）
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04 # 与生产服务器同为 openssl 3.0.x，Prisma engine 平台一致
+    # 构建期占位值：CI 里没有 .env，而 PrismaClient 构造 / 预渲染需要这两个变量存在。
+    # 运行时用的是服务器上的 /var/www/rike/shared/.env（见 deploy/ecosystem.config.js）。
+    env:
+      DATABASE_URL: file:/tmp/build-placeholder.db
+      JWT_SECRET: build-placeholder-not-used-at-runtime
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 生成 Prisma Client
+        run: npx prisma generate
+
+      - name: 构建（next build，standalone 输出）
+        run: npm run build
+
+      - name: 生成建库 SQL
+        run: |
+          npx prisma migrate diff \
+            --from-empty \
+            --to-schema-datamodel prisma/schema.prisma \
+            --script > prisma/schema.sql
+          wc -l prisma/schema.sql
+
+      - name: 编译 seed 为可直接运行的 JS
+        run: |
+          npx tsc prisma/seed.ts \
+            --outDir prisma \
+            --module commonjs \
+            --target es2022 \
+            --moduleResolution node \
+            --esModuleInterop \
+            --skipLibCheck
+          mv prisma/seed.js prisma/seed.cjs
+
+      - name: 组装产物
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          if [ -d public ]; then cp -r public .next/standalone/public; fi
+          mkdir -p .next/standalone/prisma .next/standalone/deploy
+          cp prisma/schema.sql prisma/seed.cjs .next/standalone/prisma/
+          cp deploy/ecosystem.config.js deploy/remote-deploy.sh .next/standalone/deploy/
+          # standalone 里可能带上本地 .env（Next 会复制），以及 Prisma 引擎下载残留的 .tmp 大文件
+          rm -f .next/standalone/.env
+          if [ -d .next/standalone/node_modules/.prisma ]; then
+            find .next/standalone/node_modules/.prisma -name '*.tmp*' -delete
+          fi
+          tar -czf rike-release.tar.gz -C .next/standalone .
+          du -sh rike-release.tar.gz
+
+      - name: 上传产物到服务器
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          source: rike-release.tar.gz
+          target: /var/www/rike/incoming
+
+      - name: 远程部署
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || '22' }}
+          script_stop: true
+          script: |
+            SHA=${{ github.sha }}
+            BASE=/var/www/rike
+            REL=$BASE/releases/$SHA
+            mkdir -p $BASE/incoming $BASE/releases
+            rm -rf $REL && mkdir -p $REL
+            tar -xzf $BASE/incoming/rike-release.tar.gz -C $REL
+            bash $REL/deploy/remote-deploy.sh $SHA

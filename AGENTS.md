@@ -13,7 +13,7 @@
 - **shadcn/ui** 风格组件（`components/ui/*`，基于 `@base-ui/react`）
 - **Prisma 6** + **SQLite**（`prisma/dev.db`）
 - **jose**（JWT 会话）、**bcryptjs**（口令哈希）、**date-fns**（日期）
-- 部署不在本仓库范围内。
+- 部署见 `deploy/README.md`（本仓库是部署入口）
 
 ## Commands
 
@@ -36,6 +36,10 @@ npm run db:seed:demo # 演示数据：一个家 + 5 位成员 + 最近 3 周打�
 npm run db:seed:demo        # 测试依赖演示数据
 node test/browser-test.mjs  # 登录 → 打卡 → 报告页 → 后台录入，14 项
 ```
+
+## Deploy
+
+**构建在 GitHub Actions 完成，生产服务器只接收 `.next/standalone` 产物**（push `main` 自动部署）。服务器只有 1.6G 内存且与其它应用共享，**永远不要在那台机器上跑 `npm ci` / `npm run build`**，会 OOM 拖死整机（2026-09-16 连续死机两次）。产物路径、目录布局、一次性初始化与回滚见 `deploy/README.md`。
 
 ## Architecture
 

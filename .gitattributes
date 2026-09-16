@@ -1,0 +1,3 @@
+# 仓库在 Windows 上开发、在 Linux 上部署，脚本必须保持 LF，否则远程 bash 会报 "\r: command not found"
+*.sh text eol=lf
+*.yml text eol=lf
