@@ -13,14 +13,19 @@ export async function POST(request: Request) {
 
     const { nickname, inviteCode } = await request.json();
 
-    if (!nickname || !inviteCode) {
+    if (
+      typeof nickname !== "string" ||
+      typeof inviteCode !== "string" ||
+      !nickname ||
+      !inviteCode
+    ) {
       return NextResponse.json(
         { error: "请输入昵称和邀请码" },
         { status: 400 }
       );
     }
 
-    if (typeof nickname === "string" && isPhoneLike(nickname)) {
+    if (isPhoneLike(nickname)) {
       return NextResponse.json({ error: PHONE_HINT }, { status: 400 });
     }
 

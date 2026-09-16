@@ -13,14 +13,19 @@ export async function POST(request: Request) {
 
     const { name, nickname } = await request.json();
 
-    if (!name || !nickname) {
+    if (
+      typeof name !== "string" ||
+      typeof nickname !== "string" ||
+      !name ||
+      !nickname
+    ) {
       return NextResponse.json(
         { error: "请输入团体名称和昵称" },
         { status: 400 }
       );
     }
 
-    if (typeof nickname === "string" && isPhoneLike(nickname)) {
+    if (isPhoneLike(nickname)) {
       return NextResponse.json({ error: PHONE_HINT }, { status: 400 });
     }
 
