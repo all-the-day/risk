@@ -60,7 +60,7 @@ jobs:
           if [ -d public ]; then cp -r public .next/standalone/public; fi
           mkdir -p .next/standalone/prisma .next/standalone/deploy
           cp prisma/schema.sql prisma/seed.cjs .next/standalone/prisma/
-          cp deploy/ecosystem.config.js deploy/remote-deploy.sh .next/standalone/deploy/
+          cp deploy/*.sh deploy/ecosystem.config.js .next/standalone/deploy/
           # standalone 里可能带上本地 .env（Next 会复制），以及 Prisma 引擎下载残留的 .tmp 大文件
           rm -f .next/standalone/.env
           if [ -d .next/standalone/node_modules/.prisma ]; then

@@ -14,8 +14,9 @@ echo "=== rike deploy $SHA $(date '+%F %T') ==="
 [ -f "$REL/server.js" ] || { echo "产物不完整：$REL/server.js 不存在"; exit 1; }
 [ -f "$BASE/shared/.env" ] || { echo "缺少 $BASE/shared/.env（见 deploy/README.md）"; exit 1; }
 
-# PM2 配置跟随仓库走，每次部署同步一份
+# PM2 配置与运维脚本跟随仓库走，每次部署同步一份到 shared/（路径稳定，跨版本不变）
 cp -f "$REL/deploy/ecosystem.config.js" "$BASE/shared/ecosystem.config.js"
+cp -f "$REL"/deploy/*.sh "$BASE/shared/"
 
 # 切软链：PM2 始终通过 current 启动
 ln -sfn "$REL" "$BASE/current"
