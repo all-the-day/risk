@@ -24,7 +24,7 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { disabled, name, regenerateCode } = body;
+    const { disabled, name, regenerateCode, leaderMemberId } = body;
 
     const data: Record<string, unknown> = {};
     if (typeof name === "string" && name.trim()) data.name = name.trim();
@@ -45,8 +45,35 @@ export async function PATCH(
       }
     }
 
+    if (typeof leaderMemberId === "string") {
+      // 全家同时只有一个团长：任命前先清掉旧的
+      const member = await prisma.groupMember.findFirst({
+        where: { id: leaderMemberId, groupId: id },
+      });
+      if (!member) {
+        return NextResponse.json({ error: "成员不存在" }, { status: 404 });
+      }
+      await prisma.$transaction([
+        prisma.groupMember.updateMany({
+          where: { groupId: id, role: "leader" },
+          data: { role: "member" },
+        }),
+        prisma.groupMember.update({
+          where: { id: leaderMemberId },
+          data: { role: "leader" },
+        }),
+      ]);
+    }
+
     if (Object.keys(data).length === 0) {
-      return NextResponse.json({ error: "没有需要更新的字段" }, { status: 400 });
+      if (typeof leaderMemberId !== "string") {
+        return NextResponse.json(
+          { error: "没有需要更新的字段" },
+          { status: 400 }
+        );
+      }
+      // 只变更了团长，团体本身没有字段要更新
+      return NextResponse.json({ success: true });
     }
 
     const group = await prisma.group.update({

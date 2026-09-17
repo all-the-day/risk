@@ -12,8 +12,13 @@ export async function createGroup(name: string, inviteCode: string) {
   });
 }
 
-export async function joinGroup(userId: string, groupId: string, nickname: string) {
+export async function joinGroup(
+  userId: string,
+  groupId: string,
+  nickname: string,
+  role: string = "member"
+) {
   return prisma.groupMember.create({
-    data: { userId, groupId, nickname },
+    data: { userId, groupId, nickname, role },
   });
 }

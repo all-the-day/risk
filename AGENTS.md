@@ -81,6 +81,7 @@ ActivityTemplate ─┬─ ActivityCategory
 - **父项不参与打卡与计分**：有子项的事项只作分组标题（如「聚会」→ XP、ZR），它的 `score` 是子项之和，仅作展示。
 - **每日打卡是打勾式**：`ActivityRecord` 只记「某人某天做了某项」，`@@unique([userId, itemId, date])`。
 - **周分不在打卡时落库，读取时实时汇总**——避免"改了算法旧快照不一致"。`WeeklyScore` **行的存在即代表管理员覆盖**（无需 `locked` 字段），「恢复自动」= 删该行。
+- **团长（`GroupMember.role = "leader"`）**：一家同时只有一个；建家者即团长，后台可转让。`/report` 与 `/group` 里**团长与全局管理员可见全家数据，普通成员只见自己**。
 
 ## Scoring rules（`lib/score.ts`）
 
@@ -112,8 +113,8 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/login`、`/register` | 公开 |
 | `/join` | 加入 / 创建家（邀请码） |
 | `/today` | 今日事项，逐项打勾（叶子项可点，父项与分类作分组标题） |
-| `/report` | **周表**：周次多选 + 成员卡片视图 / 图表视图（柱状或折线）/ 表格视图（姓名列固定），本家成员可见 |
-| `/group` | 本家今日每人完成项数 |
+| `/report` | **周表**：周次多选 + 成员卡片视图 / 图表视图（柱状或折线）/ 表格视图（姓名列固定）；团长/管理员看全表，成员仅自己 |
+| `/group` | 本家今日完成项数：团长/管理员看全员，成员仅自己 |
 | `/profile` | 昵称、邀请码、反馈、退出 |
 | `/admin/scores` | **周分录入**：网格 inline 编辑，自动 / 已锁定 / 恢复自动 |
 | `/admin/activities` | 事项模板与条目维护（唯一事项入口，可启用模板） |
@@ -134,12 +135,12 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/api/admin/activities/items/[id]` | PATCH / DELETE | 改 / 删事项 |
 | `/api/admin/activities/categories` | POST | 新建分类 |
 | `/api/admin/activities/categories/[id]` | PATCH / DELETE | 改 / 删分类 |
-| `/api/admin/groups/[id]` | PATCH / DELETE | 团体改名 / 禁用 / 重置邀请码；DELETE 带 `memberId` 移除成员、不带则删整个团体（级联成员与周分） |
+| `/api/admin/groups/[id]` | PATCH / DELETE | 团体改名 / 禁用 / 重置邀请码 / 任命团长（`leaderMemberId`，全家唯一）；DELETE 带 `memberId` 移除成员、不带则删整个团体（级联成员与周分） |
 | `/api/admin/users` | POST | 管理员代建账号（不复用 register，避免顶掉管理员会话） |
 | `/api/admin/users/[id]` | PATCH / DELETE | 改角色 / 重置密码；删除用户（级联打卡、周分、反馈）；不能操作自己 |
 | `/api/admin/feedback/[id]` | PATCH / DELETE | 处理反馈 / 删除反馈 |
 | `/api/profile` | PATCH | 修改自己的家内昵称（GroupMember.nickname，不是登录账号） |
-| `/api/group/{create,join,leave}` | POST | 建家 / 加入 / 退出 |
+| `/api/group/{create,join,leave}` | POST | 建家（建者即团长）/ 加入 / 退出 |
 | `/api/feedback` | POST | 提交反馈 |
 
 ## Conventions

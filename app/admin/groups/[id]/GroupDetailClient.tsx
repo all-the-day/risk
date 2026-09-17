@@ -15,6 +15,7 @@ interface GroupData {
   members: {
     id: string;
     nickname: string;
+    role: string;
     joinedAt: Date;
     user: { nickname: string };
   }[];
@@ -96,6 +97,23 @@ export default function GroupDetailClient({ group }: { group: GroupData }) {
     } else {
       const data = await res.json();
       setError(data.error || "删除失败");
+    }
+  }
+
+  async function setLeader(memberId: string) {
+    if (!confirm("确定把该成员设为团长？原团长将变回普通成员（可看全表的人换成他）。")) return;
+    setError(null);
+    const res = await fetch(`/api/admin/groups/${group.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ leaderMemberId: memberId }),
+    });
+
+    if (res.ok) {
+      router.refresh();
+    } else {
+      const data = await res.json();
+      setError(data.error || "操作失败");
     }
   }
 
@@ -182,19 +200,37 @@ export default function GroupDetailClient({ group }: { group: GroupData }) {
               {i > 0 && <div className="border-t" />}
               <div className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium">{member.nickname}</p>
+                  <p className="text-sm font-medium">
+                    {member.nickname}
+                    {member.role === "leader" && (
+                      <Badge className="ml-1.5" variant="default">
+                        团长
+                      </Badge>
+                    )}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {member.user.nickname}
                   </p>
                 </div>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="text-destructive"
-                  onClick={() => removeMember(member.id)}
-                >
-                  移除
-                </Button>
+                <div className="flex items-center gap-1">
+                  {member.role !== "leader" && (
+                    <Button
+                      variant="link"
+                      size="sm"
+                      onClick={() => setLeader(member.id)}
+                    >
+                      设为团长
+                    </Button>
+                  )}
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="text-destructive"
+                    onClick={() => removeMember(member.id)}
+                  >
+                    移除
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

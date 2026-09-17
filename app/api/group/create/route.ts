@@ -43,7 +43,8 @@ export async function POST(request: Request) {
         throw new Error("无法生成唯一邀请码，请稍后重试");
       }
     }
-    await joinGroup(session.userId, group!.id, nickname);
+    // 建家的人即团长
+    await joinGroup(session.userId, group!.id, nickname, "leader");
 
     return NextResponse.json({ success: true, inviteCode });
   } catch (error) {
