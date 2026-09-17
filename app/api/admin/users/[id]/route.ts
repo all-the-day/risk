@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getGroupByInviteCode } from "@/db/group";
-import { generateInviteCode } from "@/lib/utils";
+import { hash } from "bcryptjs";
 
 export async function PATCH(
   request: Request,
@@ -14,47 +13,40 @@ export async function PATCH(
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    const admin = await prisma.user.findUnique({
       where: { id: session.userId },
     });
-
-    if (!user?.isAdmin) {
+    if (!admin?.isAdmin) {
       return NextResponse.json({ error: "无权限" }, { status: 403 });
     }
 
     const { id } = await params;
     const body = await request.json();
-    const { disabled, name, regenerateCode } = body;
+    const { isAdmin, password } = body;
 
     const data: Record<string, unknown> = {};
-    if (typeof name === "string" && name.trim()) data.name = name.trim();
-    if (typeof disabled === "boolean") data.disabled = disabled;
-    if (regenerateCode === true) {
-      for (let attempt = 0; attempt < 10; attempt++) {
-        const inviteCode = generateInviteCode();
-        if (!(await getGroupByInviteCode(inviteCode))) {
-          data.inviteCode = inviteCode;
-          break;
-        }
-      }
-      if (data.inviteCode === undefined) {
+    if (typeof isAdmin === "boolean") {
+      if (id === session.userId && !isAdmin) {
         return NextResponse.json(
-          { error: "无法生成唯一邀请码，请稍后重试" },
-          { status: 500 }
+          { error: "不能取消自己的管理员身份" },
+          { status: 400 }
         );
       }
+      data.isAdmin = isAdmin;
+    }
+    if (typeof password === "string" && password) {
+      if (password.length < 6) {
+        return NextResponse.json({ error: "密码至少6位" }, { status: 400 });
+      }
+      data.password = await hash(password, 12);
     }
 
     if (Object.keys(data).length === 0) {
       return NextResponse.json({ error: "没有需要更新的字段" }, { status: 400 });
     }
 
-    const group = await prisma.group.update({
-      where: { id },
-      data,
-    });
-
-    return NextResponse.json(group);
+    const user = await prisma.user.update({ where: { id }, data });
+    return NextResponse.json({ id: user.id, isAdmin: user.isAdmin });
   } catch (error) {
     const message = error instanceof Error ? error.message : "操作失败";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -71,27 +63,20 @@ export async function DELETE(
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
+    const admin = await prisma.user.findUnique({
       where: { id: session.userId },
     });
-
-    if (!user?.isAdmin) {
+    if (!admin?.isAdmin) {
       return NextResponse.json({ error: "无权限" }, { status: 403 });
     }
 
     const { id } = await params;
-    const body = await request.json().catch(() => ({}));
-    const memberId = typeof body?.memberId === "string" ? body.memberId : null;
-
-    if (memberId) {
-      await prisma.groupMember.delete({
-        where: { id: memberId, groupId: id },
-      });
-      return NextResponse.json({ success: true });
+    if (id === session.userId) {
+      return NextResponse.json({ error: "不能删除自己" }, { status: 400 });
     }
 
-    // 删整个团体：成员与周分靠外键级联删除；打卡记录挂在用户上，保留
-    await prisma.group.delete({ where: { id } });
+    // 加入关系、打卡记录、周分、反馈都挂在用户上，外键级联删除
+    await prisma.user.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -134,9 +134,12 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/api/admin/activities/items/[id]` | PATCH / DELETE | 改 / 删事项 |
 | `/api/admin/activities/categories` | POST | 新建分类 |
 | `/api/admin/activities/categories/[id]` | PATCH / DELETE | 改 / 删分类 |
-| `/api/admin/groups/[id]` | PATCH / DELETE | 团体 |
-| `/api/admin/feedback/[id]` | PATCH | 处理反馈 |
-| `/api/group/{create,join}` | POST | 建家 / 加入 |
+| `/api/admin/groups/[id]` | PATCH / DELETE | 团体改名 / 禁用 / 重置邀请码；DELETE 带 `memberId` 移除成员、不带则删整个团体（级联成员与周分） |
+| `/api/admin/users` | POST | 管理员代建账号（不复用 register，避免顶掉管理员会话） |
+| `/api/admin/users/[id]` | PATCH / DELETE | 改角色 / 重置密码；删除用户（级联打卡、周分、反馈）；不能操作自己 |
+| `/api/admin/feedback/[id]` | PATCH / DELETE | 处理反馈 / 删除反馈 |
+| `/api/profile` | PATCH | 修改自己的家内昵称（GroupMember.nickname，不是登录账号） |
+| `/api/group/{create,join,leave}` | POST | 建家 / 加入 / 退出 |
 | `/api/feedback` | POST | 提交反馈 |
 
 ## Conventions

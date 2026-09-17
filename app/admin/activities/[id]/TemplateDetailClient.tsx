@@ -78,6 +78,10 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
   // Add category state
   const [addCategoryName, setAddCategoryName] = useState("");
 
+  // Rename category
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
+  const [editCategoryName, setEditCategoryName] = useState("");
+
   const [data, setData] = useState({ categories: template.categories, items: template.items });
 
   function refresh() {
@@ -225,6 +229,26 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
     } else {
       const d = await res.json();
       setError(d.error || "删除失败");
+    }
+  }
+
+  async function saveCategory(catId: string) {
+    if (!editCategoryName.trim()) {
+      setError("请输入分类名称");
+      return;
+    }
+    setError(null);
+    const res = await fetch(`/api/admin/activities/categories/${catId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: editCategoryName }),
+    });
+    if (res.ok) {
+      setEditingCategoryId(null);
+      refresh();
+    } else {
+      const d = await res.json();
+      setError(d.error || "保存失败");
     }
   }
 
@@ -630,16 +654,52 @@ export default function TemplateDetailClient({ template }: TemplateDetailClientP
             {data.categories.map((cat) => (
               <div key={cat.id}>
                 <div className="flex items-center justify-between px-4 py-2 bg-muted/50">
-                  <span className="text-sm font-medium text-foreground">
-                    {cat.name}
-                  </span>
-                  <Button
-                    variant="destructive"
-                    size="xs"
-                    onClick={() => deleteCategory(cat.id)}
-                  >
-                    删除分类
-                  </Button>
+                  {editingCategoryId === cat.id ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        type="text"
+                        value={editCategoryName}
+                        onChange={(e) => setEditCategoryName(e.target.value)}
+                        className="w-40"
+                        placeholder="分类名称"
+                      />
+                      <Button size="xs" onClick={() => saveCategory(cat.id)}>
+                        保存
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        onClick={() => setEditingCategoryId(null)}
+                      >
+                        取消
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <span className="text-sm font-medium text-foreground">
+                        {cat.name}
+                      </span>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          onClick={() => {
+                            setEditingCategoryId(cat.id);
+                            setEditCategoryName(cat.name);
+                          }}
+                        >
+                          编辑
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="xs"
+                          onClick={() => deleteCategory(cat.id)}
+                        >
+                          删除分类
+                        </Button>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {cat.items.length === 0 ? (
                   <div className="px-4 py-3 text-center text-xs text-muted-foreground">

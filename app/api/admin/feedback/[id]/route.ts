@@ -38,3 +38,31 @@ export async function PATCH(
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const session = await getSession();
+    if (!session) {
+      return NextResponse.json({ error: "未登录" }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.userId },
+    });
+
+    if (!user?.isAdmin) {
+      return NextResponse.json({ error: "无权限" }, { status: 403 });
+    }
+
+    const { id } = await params;
+    await prisma.feedback.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "删除失败";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

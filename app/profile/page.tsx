@@ -17,7 +17,9 @@ export default async function ProfilePage() {
       <main className="max-w-md mx-auto px-4 pt-8 pb-6">
         <ProfileClient
           nickname={membership.nickname}
+          membershipId={membership.id}
           groupName={membership.group.name}
+          groupId={membership.group.id}
           inviteCode={membership.group.inviteCode}
         />
       </main>

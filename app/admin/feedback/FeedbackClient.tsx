@@ -42,6 +42,21 @@ export default function FeedbackClient({
     }
   }
 
+  async function deleteFeedback(id: string) {
+    if (!confirm("确定删除这条反馈？")) return;
+    setError(null);
+    const res = await fetch(`/api/admin/feedback/${id}`, {
+      method: "DELETE",
+    });
+
+    if (res.ok) {
+      setFeedbacks((prev) => prev.filter((f) => f.id !== id));
+    } else {
+      const data = await res.json();
+      setError(data.error || "删除失败");
+    }
+  }
+
   function generatePrompt(feedback: FeedbackRecord): string {
     const typeLabel = feedback.type === "bug" ? "Bug 修复" : "功能建议";
     return `# ${typeLabel}
@@ -178,6 +193,14 @@ ${feedback.content}
                       }
                     >
                       {f.status === "pending" ? "标记已处理" : "标记待处理"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="link"
+                      className="text-destructive"
+                      onClick={() => deleteFeedback(f.id)}
+                    >
+                      删除
                     </Button>
                   </div>
                 </div>
