@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "shadcn": {
+      "args": [
+        "shadcn@latest",
+        "mcp"
+      ],
+      "print": true,
+      "command": "npx",
+      "type": "stdio"
+    }
+  },
+  "disabledMcpServers": []
+}
