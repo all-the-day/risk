@@ -47,6 +47,13 @@ node test/browser-test.mjs  # 登录 → 打卡 → 报告页 → 后台录入�
 - 线上库是 `file:/var/www/rike/data/prod.db`（绝对路径，在代码目录之外，部署不会碰它）；本地开发仍是 `file:./dev.db`（解析为 `prisma/dev.db`）。
 - `prisma/schema.sql` 与 `prisma/seed.cjs` 是 CI 生成的中间产物，**不在仓库里**，别去找；改 schema 后线上要 `bash /var/www/rike/shared/db-init.sh --force`（会清库）。
 
+发版与服务器操作：
+
+- **push `main` = 上线，必须经用户当次明确同意才能 push**；commit 可以自由做。授权按次计算，不从「你自己操作就行」这类宽泛授权里推断。
+- 服务器上的**变更**操作走本地 server-ops 项目（`d:/coder/aiWorkSpace/server-ops`）的 `python server-ops.py -s <server> ...`（有审计日志）；MCP ssh 只作只读查询。操作完同步 `docs/servers/<server>.md` 并跑 `drift` 复核。
+- 本机 `gh` 命令必须带 `HTTPS_PROXY=http://127.0.0.1:7897`（网络在 H3C TLS 拦截网关后，否则报 x509）；`git push/pull` 已配 CA bundle 直连即可，不用代理。
+- Meoo 全栈部署在评估中（阿里秒悟 CLI 已装并授权，主要门槛是 Prisma SQLite → 云数据库）；用户提「迁 Meoo / 试部署」时先给方案再动手。
+
 ## Architecture
 
 分层单包全栈应用（`@/*` 指向项目根）：
@@ -139,5 +146,13 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 - 需要聚合的数据（周表、录入网格）在**服务端一次算好**再传给客户端，不要下传明细记录
 - 日期一律用 `lib/date.ts`，不要自己拼日期
 - 样式用 shadcn 语义 token（`bg-card` / `text-muted-foreground` / `success` / `warning`），**不要写死 `text-gray-500` 这类颜色**
+- 前台 tab 页（`/today` `/report` `/group` `/profile`）**不要顶部 header bar**：页面身份由底部导航表达，信息（团体名、人数、日期等）下沉进已有卡片当小字；**页面第一条必须是内容**，不是状态横幅、控件标签
+- 表格/矩阵类需求**不要 1:1 复刻纸质表格版式**（那是纸面的局限），先调研同类功能的成熟 UI 再设计；找到参考后给用户看依据再开工
 - Prisma client 用 `lib/prisma.ts` 单例
 - 客户端组件从 `services/*` 只导入**类型**时用 `import type`（`services` 依赖 prisma，不能进客户端包）
+
+## 协作方式（给 agent 的工作约定）
+
+- **小改动一轮做完就汇报**：改文案/校验/展示类改动自己动手，跑一次 `tsc` / `lint`（必要时一次冒烟）即可，不要形成「验证 → 修复 → 再验证」的链条。判断看风险半径不看文件数：只有数据迁移、删数据、并发/幂等、大范围重构才值得独立验证，且最多一轮，发现小问题顺手修掉再汇报
+- **需求清楚就直接实现**，不要默认先做静态原型/对比稿；小分歧（如柱状 vs 折线）直接选一个合理方案，能切换就做成可切换
+- 汇报要短：结论 + 证据 + 遗留，不铺开讲过程
