@@ -12,3 +12,6 @@ prisma/dev.db
 *.tar.gz
 *.zip
 *.log
+
+# 本地工具配置（审批/权限记录，不入库）
+.codebuddy/settings.local.json
