@@ -7,7 +7,7 @@ export function normalizeChecks(checksPerWeek: number): number {
   return checksPerWeek > 0 ? checksPerWeek : 1;
 }
 
-// 某事项本周得分，单位：分 × 100
+// 某项目本周得分，单位：分 × 100
 export function earnedCenti(
   count: number,
   score: number,
@@ -33,4 +33,9 @@ export function displayScore(centi: number): number {
 export function percent(score: number, maxScore: number): number {
   if (maxScore <= 0) return 0;
   return Math.max(0, Math.min(100, Math.round((score / maxScore) * 100)));
+}
+
+// 满分 = 启用项目分值之和（周表分母由此而来，不再落库）
+export function maxScoreOf(items: { score: number }[]): number {
+  return items.reduce((sum, item) => sum + item.score, 0);
 }

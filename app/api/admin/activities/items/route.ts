@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseAllowedWeekdays, serializeAllowedWeekdays } from "@/lib/date";
 
 export async function POST(request: Request) {
   try {
@@ -17,10 +18,16 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { templateId, categoryId, parentId, name, fullName, score, checksPerWeek, order } =
-      body;
+    const {
+      name,
+      score,
+      checksPerWeek,
+      order,
+      allowedWeekdays,
+      scope,
+    } = body;
 
-    if (!templateId || !name || score == null) {
+    if (!name || score == null) {
       return NextResponse.json({ error: "缺少必填字段" }, { status: 400 });
     }
 
@@ -28,11 +35,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "名称不能超过50字" }, { status: 400 });
     }
 
-    // Get the max order for the template if not specified
+    if (scope !== undefined && !["personal", "group"].includes(scope)) {
+      return NextResponse.json({ error: "类型只能是个人或团体" }, { status: 400 });
+    }
+
+    // 没指定顺序就排在最后
     let itemOrder = order;
     if (itemOrder === undefined) {
       const maxOrder = await prisma.activityItem.findFirst({
-        where: { templateId },
         orderBy: { order: "desc" },
         select: { order: true },
       });
@@ -41,13 +51,13 @@ export async function POST(request: Request) {
 
     const item = await prisma.activityItem.create({
       data: {
-        templateId,
-        categoryId: categoryId || null,
-        parentId: parentId || null,
         name,
-        fullName: fullName || null,
         score,
         checksPerWeek: Number(checksPerWeek) > 0 ? Number(checksPerWeek) : 1,
+        allowedWeekdays: serializeAllowedWeekdays(
+          parseAllowedWeekdays(allowedWeekdays)
+        ),
+        scope: scope ?? "personal",
         order: itemOrder,
       },
     });

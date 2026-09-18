@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { parseAllowedWeekdays, serializeAllowedWeekdays } from "@/lib/date";
 
 export async function PATCH(
   request: Request,
@@ -21,12 +22,23 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, fullName, score, checksPerWeek, order, enabled, categoryId, parentId } =
-      body;
+    const {
+      name,
+      score,
+      checksPerWeek,
+      order,
+      enabled,
+      allowedWeekdays,
+      scope,
+      restore,
+    } = body;
+
+    if (scope !== undefined && !["personal", "group"].includes(scope)) {
+      return NextResponse.json({ error: "类型只能是个人或团体" }, { status: 400 });
+    }
 
     const data: Record<string, unknown> = {};
     if (name !== undefined) data.name = name;
-    if (fullName !== undefined) data.fullName = fullName;
     if (score !== undefined) data.score = score;
     if (checksPerWeek !== undefined) {
       const weekly = Number(checksPerWeek);
@@ -34,8 +46,14 @@ export async function PATCH(
     }
     if (order !== undefined) data.order = order;
     if (enabled !== undefined) data.enabled = enabled;
-    if (categoryId !== undefined) data.categoryId = categoryId;
-    if (parentId !== undefined) data.parentId = parentId;
+    if (allowedWeekdays !== undefined) {
+      data.allowedWeekdays = serializeAllowedWeekdays(
+        parseAllowedWeekdays(allowedWeekdays)
+      );
+    }
+    if (scope !== undefined) data.scope = scope;
+    // restore: true = 从回收站恢复
+    if (restore === true) data.deletedAt = null;
 
     const item = await prisma.activityItem.update({
       where: { id },
@@ -68,7 +86,11 @@ export async function DELETE(
 
     const { id } = await params;
 
-    await prisma.activityItem.delete({ where: { id } });
+    // 软删除：只标记 deletedAt，历史打卡记录保留，可随时恢复
+    await prisma.activityItem.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

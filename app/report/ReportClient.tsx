@@ -2,7 +2,14 @@
 
 import { useState } from "react";
 import BottomNav from "@/components/BottomNav";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import WeekPicker from "@/components/WeekPicker";
 import MemberCards from "./MemberCards";
 import MemberChart from "./MemberChart";
@@ -18,11 +25,11 @@ interface ReportClientProps {
   maxScore: number;
 }
 
-const VIEWS: { value: "cards" | "chart" | "table"; label: string }[] = [
+const VIEWS = [
   { value: "cards", label: "成员" },
   { value: "chart", label: "图表" },
   { value: "table", label: "表格" },
-];
+] as const;
 
 export default function ReportClient({
   groupName,
@@ -41,7 +48,7 @@ export default function ReportClient({
     setSelected((prev) => {
       if (prev.includes(week)) {
         if (prev.length === 1) return prev; // 至少保留一周
-        return prev.filter((w) => w !== week);
+        return prev.filter((item) => item !== week);
       }
       return [...prev, week].sort();
     });
@@ -58,29 +65,41 @@ export default function ReportClient({
 
   return (
     <>
-      <div className="mb-2 flex items-baseline gap-2">
-        <h2 className="text-sm font-medium">选择周次</h2>
-        <span className="text-xs text-muted-foreground">可多选</span>
-      </div>
-      <WeekPicker weeks={weeks} selected={orderedSelected} onToggle={toggleWeek} />
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>选择周次</CardTitle>
+          <CardDescription>可多选，看趋势</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <WeekPicker
+            weeks={weeks}
+            selected={orderedSelected}
+            onToggle={toggleWeek}
+          />
+        </CardContent>
+      </Card>
 
-      <Card className="my-4">
-        <CardContent className="p-4">
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle>本家本周得分</CardTitle>
+          <CardDescription>
+            {groupName} · {formatWeekLabel(currentWeek)} · 满分 {maxScore}/人
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
           <div className="flex items-baseline justify-between">
-            <div>
-              <p className="text-xs text-muted-foreground">本家本周得分</p>
-              <p className="text-2xl font-bold tracking-tight">
-                {total}
-                <span className="text-xs font-medium text-muted-foreground">
-                  / {maxTotal}
-                </span>
-              </p>
-            </div>
+            <p className="text-2xl font-bold tracking-tight">
+              {total}
+              <span className="text-xs font-medium text-muted-foreground">
+                {" "}
+                / {maxTotal}
+              </span>
+            </p>
             <p className="text-xs text-muted-foreground">
               {fullCount} / {members.length} 人满分
             </p>
           </div>
-          <div className="mt-2.5 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
             <div
               className={`h-full rounded-full transition-all ${
                 total >= maxTotal && maxTotal > 0
@@ -90,49 +109,37 @@ export default function ReportClient({
               style={{ width: `${percent(total, maxTotal)}%` }}
             />
           </div>
-          <p className="mt-1.5 text-xs text-muted-foreground">
-            {groupName} · {formatWeekLabel(currentWeek)} · 满分 {maxScore}/人
-          </p>
         </CardContent>
       </Card>
 
       <div className="mb-3 flex items-center justify-between gap-2">
-        <div className="flex gap-0.5 rounded-lg bg-muted p-1">
+        <ToggleGroup
+          value={[view]}
+          onValueChange={(value) =>
+            setView(((value as string[])[0] as typeof view) ?? "cards")
+          }
+          variant="outline"
+          size="sm"
+        >
           {VIEWS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => setView(option.value)}
-              aria-pressed={view === option.value}
-              className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                view === option.value
-                  ? "bg-card font-medium text-foreground"
-                  : "text-muted-foreground"
-              }`}
-            >
+            <ToggleGroupItem key={option.value} value={option.value}>
               {option.label}
-            </button>
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
 
         {view === "chart" && (
-          <div className="flex gap-0.5 rounded-lg bg-muted p-1">
-            {(["bar", "line"] as const).map((option) => (
-              <button
-                key={option}
-                type="button"
-                onClick={() => setChartType(option)}
-                aria-pressed={chartType === option}
-                className={`rounded-md px-2.5 py-1 text-xs transition-colors ${
-                  chartType === option
-                    ? "bg-card font-medium text-foreground"
-                    : "text-muted-foreground"
-                }`}
-              >
-                {option === "bar" ? "柱状" : "折线"}
-              </button>
-            ))}
-          </div>
+          <ToggleGroup
+            value={[chartType]}
+            onValueChange={(value) =>
+              setChartType(((value as string[])[0] as "bar" | "line") ?? "bar")
+            }
+            variant="outline"
+            size="sm"
+          >
+            <ToggleGroupItem value="bar">柱状</ToggleGroupItem>
+            <ToggleGroupItem value="line">折线</ToggleGroupItem>
+          </ToggleGroup>
         )}
       </div>
 

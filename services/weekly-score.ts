@@ -1,9 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { getActiveTemplate } from "@/db/activity";
-import { getActiveLeaves } from "@/services/activity";
+import { getEnabledItems } from "@/db/activity";
 import { getRecordsInRange } from "@/db/record";
 import { getScoresInRange } from "@/db/weekly-score";
-import { earnedCenti, displayScore, sumCenti } from "@/lib/score";
+import { earnedCenti, displayScore, sumCenti, maxScoreOf } from "@/lib/score";
 import { getWeekEnd, getWeekStartOf } from "@/lib/date";
 
 export type CellScore = {
@@ -19,7 +18,6 @@ export type MemberWeekRow = {
 };
 
 export type WeeklyTable = {
-  templateName: string;
   maxScore: number;
   weeks: string[];
   members: MemberWeekRow[];
@@ -46,10 +44,12 @@ export async function getWeeklyTable(
   groupId: string,
   weeks: string[]
 ): Promise<WeeklyTable | null> {
-  const template = await getActiveTemplate();
-  if (!template || weeks.length === 0) return null;
+  if (weeks.length === 0) return null;
 
-  const leaves = getActiveLeaves(template);
+  const leaves = await getEnabledItems();
+  if (leaves.length === 0) return null;
+
+  const maxScore = maxScoreOf(leaves);
   const members = await prisma.groupMember.findMany({
     where: { groupId },
     orderBy: { joinedAt: "asc" },
@@ -64,7 +64,7 @@ export async function getWeeklyTable(
     userIds.length ? getScoresInRange(userIds, weeks) : [],
   ]);
 
-  // 次数：按 人 + 事项 + 周 统计（一条记录 = 当天一次）
+  // 次数：按 人 + 项目 + 周 统计（一条记录 = 当天一次）
   const counts = new Map<string, number>();
   for (const record of records) {
     const week = getWeekStartOf(record.date);
@@ -89,8 +89,7 @@ export async function getWeeklyTable(
   });
 
   return {
-    templateName: template.name,
-    maxScore: template.maxScore,
+    maxScore,
     weeks,
     members: rows,
   };

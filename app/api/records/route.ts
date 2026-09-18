@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const itemId = body?.itemId;
     if (typeof itemId !== "string" || !itemId) {
-      return NextResponse.json({ error: "缺少事项 id" }, { status: 400 });
+      return NextResponse.json({ error: "缺少项目 id" }, { status: 400 });
     }
 
     const today = getTodayString();

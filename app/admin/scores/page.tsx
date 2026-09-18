@@ -24,31 +24,24 @@ export default async function AdminScoresPage({
     );
   }
 
-  const current = groups.find((g) => g.id === group) ?? groups[0];
+  const current = groups.find((item) => item.id === group) ?? groups[0];
   const table = await getWeeklyTable(current.id, getRecentWeeks(6));
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">周分录入</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          默认按成员自打卡汇总；管理员录入后覆盖并锁定，可随时恢复自动。
-        </p>
-      </div>
+  if (!table) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        还没有配置项目，请先到「项目管理」添加。
+      </p>
+    );
+  }
 
-      {table ? (
-        <ScoreGridClient
-          groups={groups}
-          groupId={current.id}
-          weeks={table.weeks}
-          members={table.members}
-          maxScore={table.maxScore}
-        />
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          还没有启用的事项模板，请先到「事项模板」启用一个。
-        </p>
-      )}
-    </div>
+  return (
+    <ScoreGridClient
+      groups={groups}
+      groupId={current.id}
+      weeks={table.weeks}
+      members={table.members}
+      maxScore={table.maxScore}
+    />
   );
 }

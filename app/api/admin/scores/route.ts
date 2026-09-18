@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { getActiveTemplate } from "@/db/activity";
+import { getEnabledItems } from "@/db/activity";
+import { maxScoreOf } from "@/lib/score";
 import { upsertScore, deleteScore } from "@/db/weekly-score";
 import { isFutureWeek, isValidWeekStart } from "@/lib/date";
 
@@ -56,18 +57,19 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: target.error }, { status: target.status });
     }
 
-    const template = await getActiveTemplate();
-    if (!template) {
-      return NextResponse.json({ error: "当前没有启用的事项模板" }, { status: 400 });
+    const items = await getEnabledItems();
+    if (items.length === 0) {
+      return NextResponse.json({ error: "还没有配置项目" }, { status: 400 });
     }
+    const maxScore = maxScoreOf(items);
 
     const value = Number(score);
     if (!Number.isInteger(value) || value < 0) {
       return NextResponse.json({ error: "分数必须是不小于 0 的整数" }, { status: 400 });
     }
-    if (value > template.maxScore) {
+    if (value > maxScore) {
       return NextResponse.json(
-        { error: `分数不能超过满分 ${template.maxScore}` },
+        { error: `分数不能超过满分 ${maxScore}` },
         { status: 400 }
       );
     }

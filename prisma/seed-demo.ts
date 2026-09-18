@@ -36,22 +36,15 @@ function generateInviteCode(): string {
 }
 
 async function main() {
-  const template = await prisma.activityTemplate.findFirst({
+  const items = await prisma.activityItem.findMany({
     where: { enabled: true },
-    include: { items: true },
+    orderBy: { order: "asc" },
   });
-  if (!template) {
-    throw new Error("没有启用的事项模板，请先运行 npm run db:seed");
+  if (items.length === 0) {
+    throw new Error("还没有项目，请先运行 npm run db:seed");
   }
 
-  // 叶子项 = 没有子项的事项（父项不参与计分）
-  const parentIds = new Set(
-    template.items.filter((i) => i.parentId).map((i) => i.parentId)
-  );
-  const leaves = template.items.filter(
-    (i) => i.enabled && !parentIds.has(i.id)
-  );
-  const weeklyItems = leaves.filter((i) => i.checksPerWeek <= 1);
+  const weeklyItems = items.filter((i) => i.checksPerWeek <= 1);
 
   // 重置演示数据
   const nicknames = MEMBERS.map((m) => m.nickname);
@@ -82,7 +75,7 @@ async function main() {
 
     for (const week of weeks) {
       const start = new Date(`${week}T00:00:00`);
-      for (const item of leaves) {
+      for (const item of items) {
         const dates: string[] = [];
 
         if (item.checksPerWeek > 1) {
@@ -123,7 +116,7 @@ async function main() {
   });
 
   console.log(
-    `演示数据完成：${GROUP_NAME}（邀请码 ${group.inviteCode}）·${MEMBERS.length} 人 · ${leaves.length} 项 · ${weeks.length} 周记录`
+    `演示数据完成：${GROUP_NAME}（邀请码 ${group.inviteCode}）·${MEMBERS.length} 人 · ${items.length} 项 · ${weeks.length} 周记录`
   );
   console.log(
     `登录示例（用昵称，不要用手机号）：${MEMBERS[0].nickname} / ${DEMO_PASSWORD}（管理员 admin / admin123）`

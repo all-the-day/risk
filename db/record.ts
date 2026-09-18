@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 
-// 某人在某天已打卡的事项 id
+// 某人在某天已打卡的项目 id
 export async function getCheckedItemIds(userId: string, date: string) {
   const records = await prisma.activityRecord.findMany({
     where: { userId, date },

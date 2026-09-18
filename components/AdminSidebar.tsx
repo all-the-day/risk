@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { href: "/admin/scores", label: "周分录入" },
-  { href: "/admin/activities", label: "事项模板" },
+  { href: "/admin/activities", label: "项目管理" },
   { href: "/admin/groups", label: "团体" },
   { href: "/admin/users", label: "用户" },
   { href: "/admin/feedback", label: "反馈" },
@@ -31,7 +31,7 @@ export default function AdminSidebar() {
       <div className="mb-6">
         <h1 className="text-lg font-bold">管理后台</h1>
       </div>
-      <nav className="space-y-1">
+      <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href ||
@@ -53,7 +53,7 @@ export default function AdminSidebar() {
           );
         })}
       </nav>
-      <div className="mt-8 pt-4 border-t border-sidebar-border space-y-1">
+      <div className="mt-8 pt-4 border-t border-sidebar-border flex flex-col gap-1">
         <Link
           href="/today"
           onClick={() => setMobileOpen(false)}

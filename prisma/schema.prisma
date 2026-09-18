@@ -57,47 +57,18 @@ model Feedback {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model ActivityTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  maxScore    Int // 叶子项分值合计，作为周表分母
-  enabled     Boolean  @default(false) // 当前启用的模板
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  categories ActivityCategory[]
-  items      ActivityItem[]
-}
-
-model ActivityCategory {
-  id         String   @id @default(cuid())
-  templateId String
-  name       String
-  order      Int
-  createdAt  DateTime @default(now())
-
-  template ActivityTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  items    ActivityItem[]
-}
-
+// 项目（唯一实体）：规则全部挂在项目上，没有模板 / 分类 / 父子层级
 model ActivityItem {
   id         String   @id @default(cuid())
-  templateId String
-  categoryId String?
-  parentId   String?
   name       String
-  fullName   String?
   score      Int // 该项每周满分
   checksPerWeek Int   @default(1) // 一周可打卡次数
+  allowedWeekdays String? // 打卡日，CSV（0=周日，如 "0" 仅主日）；null = 不限
+  scope      String   @default("personal") // "personal" 个人 | "group" 团体
   order      Int
   enabled    Boolean  @default(true)
+  deletedAt  DateTime? // 软删除：非空即已删除，历史打卡记录保留
   createdAt  DateTime @default(now())
-
-  template ActivityTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  category ActivityCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  parent   ActivityItem?     @relation("ItemHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
-  children ActivityItem[]    @relation("ItemHierarchy")
 
   records ActivityRecord[]
 }

@@ -18,12 +18,12 @@ export default async function TodayPage() {
       <main className="max-w-md mx-auto px-4 pt-8 pb-6">
         {checklist ? (
           <TodayClient
-            rows={checklist.rows}
+            items={checklist.items}
             checkedItemIds={checklist.checkedItemIds}
           />
         ) : (
           <p className="text-sm text-muted-foreground">
-            管理员还没有启用事项模板，请稍后再来。
+            管理员还没有配置项目，请稍后再来。
           </p>
         )}
       </main>

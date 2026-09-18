@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
-import { getActiveTemplate } from "@/db/activity";
-import { getActiveLeaves } from "@/services/activity";
+import { getEnabledItems } from "@/db/activity";
+import { isAllowedOnDate } from "@/lib/date";
 
 export type MemberDaily = {
   userId: string;
@@ -8,12 +8,15 @@ export type MemberDaily = {
   done: number;
 };
 
-// 本家今日完成情况：按成员统计当天已打卡的叶子项数
+// 本家今日完成情况：按成员统计当天已打卡的项目数
 export async function getGroupDailyStatus(groupId: string, date: string) {
-  const template = await getActiveTemplate();
-  if (!template) return null;
+  const enabled = await getEnabledItems();
+  if (enabled.length === 0) return null;
 
-  const leaves = getActiveLeaves(template);
+  // 当天可打卡的项目（只主日打的项目，平时不计入分母）
+  const leaves = enabled.filter((item) =>
+    isAllowedOnDate(item.allowedWeekdays, date)
+  );
   const members = await prisma.groupMember.findMany({
     where: { groupId },
     orderBy: { joinedAt: "asc" },
