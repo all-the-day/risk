@@ -4,7 +4,7 @@
 
 中文「日课」打卡小组 App。用户加入一个「家」（团体），每天对 CL 事项逐项打勾，系统按周汇总出每个人的周分，成员可查看本家周表，管理员可录入/覆盖周分。MVP 阶段。
 
-**CL** = 本项目的每日打卡内容；事项带分值（如 CX 晨兴 6 分/周、聚会 → XP 擘饼 7 分/周），叶子项分值合计 = 模板满分（当前 50）。口径来自纸质「团体操练表」：CX 与 追求 一周三次算满分，团体DG 一周至少一次。
+**CL** = 本项目的每日打卡内容；每个项目带分值（如 CX 6 分/周、ZR 主日 7 分/周），启用项目分值合计 = 满分（当前 50）。口径来自纸质「团体操练表」：CX 与 追求 一周三次算满分。
 
 ## Tech stack
 
@@ -23,7 +23,7 @@ npm run build        # 生产构建
 npm run lint         # ESLint
 npm run db:generate  # prisma generate
 npm run db:push      # 同步 schema 到数据库（无 migration 文件）
-npm run db:seed      # 管理员账号 + 周评模板（生产必需）
+npm run db:seed      # 管理员账号 + 9 个默认项目（生产必需）
 npm run db:seed:demo # 演示数据：一个家 + 5 位成员 + 最近 3 周打卡记录（开发用）
 ```
 
@@ -69,16 +69,18 @@ node test/browser-test.mjs  # 登录 → 打卡 → 报告页 → 后台录入�
 ## Domain model（核心，改之前先读懂）
 
 ```
-ActivityTemplate ─┬─ ActivityCategory
-                  └─ ActivityItem（parentId 自关联，两层；categoryId 可选）
-                              ↓ 每日打勾
-                        ActivityRecord（userId + itemId + date）
-                              ↓ 读取时实时汇总
-                        周分（自动）  ←被覆盖→  WeeklyScore（管理员录入）
+ActivityItem（唯一实体：分值 / 每周次数 / 打卡日 / 个人-团体 / 启用）
+        ↓ 每日打勾
+  ActivityRecord（userId + itemId + date）
+        ↓ 读取时实时汇总
+  周分（自动）  ←被覆盖→  WeeklyScore（管理员录入）
 ```
 
-- **`ActivityItem` 是唯一事项源**。`enabled=false` 的事项不显示、不计分。
-- **父项不参与打卡与计分**：有子项的事项只作分组标题（如「聚会」→ XP、ZR），它的 `score` 是子项之和，仅作展示。
+- **没有模板、没有分类、没有父子层级**（2026-09-17 全部砍掉）：项目（`ActivityItem`）是唯一实体，所有规则直接挂在项目上。
+- **项目自带规则**：`score`（每周满分）、`checksPerWeek`（达到几次算满分，超出不再加分但**打卡照记**）、`allowedWeekdays`（打卡日：null=不限，"0"=仅主日，CSV 可多天）、`scope`（"personal" 个人 / "group" 团体）、`order`（显示顺序）、`enabled`。
+- **删除是软删除**：`deletedAt` 非空即已删除；已删除项目不出现在管理列表、打卡页、满分计算里，历史打卡记录保留，可在管理页「已删除」里恢复。
+- **`enabled=false` 的项目**：打卡页不出现、不计满分（历史打卡记录保留）。
+
 - **每日打卡是打勾式**：`ActivityRecord` 只记「某人某天做了某项」，`@@unique([userId, itemId, date])`。
 - **周分不在打卡时落库，读取时实时汇总**——避免"改了算法旧快照不一致"。`WeeklyScore` **行的存在即代表管理员覆盖**（无需 `locked` 字段），「恢复自动」= 删该行。
 - **团长（`GroupMember.role = "leader"`）**：一家同时只有一个；建家者即团长，后台可转让。`/report` 与 `/group` 里**团长与全局管理员可见全家数据，普通成员只见自己**。
@@ -86,9 +88,9 @@ ActivityTemplate ─┬─ ActivityCategory
 ## Scoring rules（`lib/score.ts`）
 
 - 单次得分 = `item.score / item.checksPerWeek`（`checksPerWeek <= 0` 按 1 兜底）
-- 本周次数超过 `checksPerWeek` 封顶；不足按已完成次数线性给分
+- 本周次数超过 `checksPerWeek` 封顶（多打不再加分，但记录保留）；不足按已完成次数线性给分
 - 内部按「分 × 100」整数累加，展示时四舍五入为整数
-- 周表分母一律取 `template.maxScore`（**不要**累加所有 `item.score`，会把父项算进去）
+- **满分不落库**：`maxScoreOf()`（`lib/score.ts`）= 启用项目分值之和，周表分母/录入上限/打卡页都用它实时算；项目改了就自动跟着变
 
 ## Week rules（`lib/date.ts`）
 
@@ -96,6 +98,7 @@ ActivityTemplate ─┬─ ActivityCategory
 - **不要用 ISO 周号**（周一起算，跨年会错位），一律用日期字符串比较
 - 未来周不可选、不可录入
 - 主要函数：`getTodayString`、`getWeekStart`、`getCurrentWeekStart`、`getWeekStartOf`、`getWeekEnd`、`getRecentWeeks`、`isFutureWeek`、`isValidWeekStart`、`formatWeekLabel`、`formatWeekChip`
+- **打卡日（项目规则）**：`getWeekdayOf` / `parseAllowedWeekdays` / `serializeAllowedWeekdays` / `formatAllowedWeekdays` / `isAllowedOnDate`（0=周日）；打卡页与 `/api/records` 都用它对项目做「今天能不能打卡」过滤与校验
 
 ## Auth
 
@@ -112,12 +115,12 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/` | 未登录 → `/login`；管理员 → `/admin/scores`；否则 → `/today` |
 | `/login`、`/register` | 公开 |
 | `/join` | 加入 / 创建家（邀请码） |
-| `/today` | 今日事项，逐项打勾（叶子项可点，父项与分类作分组标题） |
+| `/today` | 今日项目，逐项打勾（只列出今天可打卡的项目；卡片内进度 = 已完成/总数） |
 | `/report` | **周表**：周次多选 + 成员卡片视图 / 图表视图（柱状或折线）/ 表格视图（姓名列固定）；团长/管理员看全表，成员仅自己 |
-| `/group` | 本家今日完成项数：团长/管理员看全员，成员仅自己 |
+| `/group` | 本家今日完成项数（分母 = 当天可打卡项目数）：团长/管理员看全员，成员仅自己 |
 | `/profile` | 昵称、邀请码、反馈、退出 |
 | `/admin/scores` | **周分录入**：网格 inline 编辑，自动 / 已锁定 / 恢复自动 |
-| `/admin/activities` | 事项模板与条目维护（唯一事项入口，可启用模板） |
+| `/admin/activities` | **项目管理**（唯一项目入口）：一屏项目列表（搜索、上下移、行内启停、删除）+ 右侧抽屉表单（名称/分值/每周次数/打卡日/类型/启用） |
 | `/admin/{groups,users,feedback}` | 团体 / 用户 / 反馈 |
 | `/admin` | 重定向到 `/admin/scores` |
 
@@ -126,15 +129,10 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | Path | Method | 说明 |
 |------|--------|------|
 | `/api/auth/{login,register,logout}` | POST | 认证 |
-| `/api/records` | POST | 打卡切换 `{itemId, date?}`；校验叶子项 + 启用 + 当前模板 |
+| `/api/records` | POST | 打卡切换 `{itemId, date?}`；校验项目启用 + 今天是否可打卡 |
 | `/api/admin/scores` | PUT / DELETE | 录入 / 恢复自动 `{userId, groupId, weekStart, score?}` |
-| `/api/admin/activities/templates` | POST | 新建模板 |
-| `/api/admin/activities/templates/[id]` | PATCH / DELETE | 改 / 删模板 |
-| `/api/admin/activities/templates/[id]/activate` | POST | 把该模板设为当前启用 |
-| `/api/admin/activities/items` | POST | 新建事项（含 `checksPerWeek`） |
-| `/api/admin/activities/items/[id]` | PATCH / DELETE | 改 / 删事项 |
-| `/api/admin/activities/categories` | POST | 新建分类 |
-| `/api/admin/activities/categories/[id]` | PATCH / DELETE | 改 / 删分类 |
+| `/api/admin/activities/items` | POST | 新建项目（`name`、`score`、`checksPerWeek`、`allowedWeekdays`、`scope`） |
+| `/api/admin/activities/items/[id]` | PATCH / DELETE | 改项目（`restore: true` = 从回收站恢复）/ 软删除 |
 | `/api/admin/groups/[id]` | PATCH / DELETE | 团体改名 / 禁用 / 重置邀请码 / 任命团长（`leaderMemberId`，全家唯一）；DELETE 带 `memberId` 移除成员、不带则删整个团体（级联成员与周分） |
 | `/api/admin/users` | POST | 管理员代建账号（不复用 register，避免顶掉管理员会话） |
 | `/api/admin/users/[id]` | PATCH / DELETE | 改角色 / 重置密码；删除用户（级联打卡、周分、反馈）；不能操作自己 |
@@ -154,6 +152,8 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 - 表格/矩阵类需求**不要 1:1 复刻纸质表格版式**（那是纸面的局限），先调研同类功能的成熟 UI 再设计；找到参考后给用户看依据再开工
 - Prisma client 用 `lib/prisma.ts` 单例
 - 客户端组件从 `services/*` 只导入**类型**时用 `import type`（`services` 依赖 prisma，不能进客户端包）
+- **项目是唯一实体**：不要再引入模板、分类、父子层级、「事项 vs 项目」两套叫法；规则一律挂在项目上（加 `ActivityItem` 字段 + 抽屉表单项 + 列表列即可）
+- 后台增删改查统一走「列表 + 右侧 Sheet 抽屉表单 + AlertDialog 确认 + `toast` 提示」，不要再做行内编辑那种交互
 
 ## 协作方式（给 agent 的工作约定）
 
