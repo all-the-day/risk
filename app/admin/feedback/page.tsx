@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import FeedbackClient from "./FeedbackClient";
+import FeedbackClient, { type AdminFeedback } from "./FeedbackClient";
 
 export default async function AdminFeedbackPage() {
   const feedbacks = await prisma.feedback.findMany({
@@ -9,10 +9,14 @@ export default async function AdminFeedbackPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">反馈管理</h1>
-      <FeedbackClient initialFeedbacks={feedbacks} />
-    </div>
-  );
+  const data: AdminFeedback[] = feedbacks.map((feedback) => ({
+    id: feedback.id,
+    type: feedback.type,
+    content: feedback.content,
+    status: feedback.status,
+    nickname: feedback.user.nickname,
+    createdAt: feedback.createdAt.toISOString().slice(0, 16).replace("T", " "),
+  }));
+
+  return <FeedbackClient feedbacks={data} />;
 }

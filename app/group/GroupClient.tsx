@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 interface MemberDaily {
@@ -24,21 +30,21 @@ export default function GroupClient({
 }: GroupClientProps) {
   return (
     <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">本家今日</h2>
-          <Badge
-            variant={allDone ? "default" : "secondary"}
-            className={allDone ? "bg-success text-success-foreground" : ""}
-          >
-            {allDone ? "全员完成" : "进行中"}
-          </Badge>
-        </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+      <CardHeader>
+        <CardTitle>本家今日</CardTitle>
+        <CardDescription>
           {groupName} · {members.length} 人 · 每日 {total} 项
-        </p>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        <Badge
+          variant={allDone ? "default" : "secondary"}
+          className={allDone ? "bg-success text-success-foreground" : ""}
+        >
+          {allDone ? "全员完成" : "进行中"}
+        </Badge>
 
-        <div className="mt-4 space-y-3">
+        <div className="flex flex-col gap-3">
           {members.map((member) => {
             const pct = total > 0 ? (member.done / total) * 100 : 0;
             const finished = total > 0 && member.done === total;
@@ -56,7 +62,7 @@ export default function GroupClient({
                 <div className="w-full bg-muted rounded-full h-1.5">
                   <div
                     className={`h-1.5 rounded-full transition-all ${
-                      finished ? "bg-success" : "bg-primary"
+                      finished ? "bg-success-foreground" : "bg-primary"
                     }`}
                     style={{ width: `${pct}%` }}
                   />

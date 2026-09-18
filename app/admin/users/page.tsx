@@ -1,26 +1,24 @@
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
-import UsersClient from "./UsersClient";
+import UsersClient, { type AdminUser } from "./UsersClient";
 
 export default async function AdminUsersPage() {
   const admin = await requireAdmin();
 
   const users = await prisma.user.findMany({
     include: {
-      memberships: {
-        include: { group: true },
-      },
+      memberships: { include: { group: { select: { name: true } } } },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">用户管理</h1>
-      <UsersClient
-        initialUsers={users}
-        currentUserId={admin.id}
-      />
-    </div>
-  );
+  const data: AdminUser[] = users.map((user) => ({
+    id: user.id,
+    nickname: user.nickname,
+    isAdmin: user.isAdmin,
+    createdAt: user.createdAt.toISOString().slice(0, 10),
+    groups: user.memberships.map((member) => member.group.name),
+  }));
+
+  return <UsersClient users={data} currentUserId={admin.id} />;
 }

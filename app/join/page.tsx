@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function JoinPage() {
@@ -91,70 +92,76 @@ export default function JoinPage() {
           </TabsList>
 
           <TabsContent value="join">
-            <form onSubmit={handleJoin} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="join-nickname">团内昵称</Label>
-                <Input
-                  id="join-nickname"
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="其他成员看到的名字"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="inviteCode">邀请码</Label>
-                <Input
-                  id="inviteCode"
-                  type="text"
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  className="font-mono text-center text-lg tracking-widest"
-                  placeholder="输入6位邀请码"
-                  maxLength={6}
-                  required
-                />
-              </div>
-              {error && (
-                <p className="text-destructive text-sm text-center">{error}</p>
-              )}
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "加入中..." : "加入团体"}
-              </Button>
+            <form onSubmit={handleJoin}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="join-nickname">团内昵称</FieldLabel>
+                  <Input
+                    id="join-nickname"
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    placeholder="其他成员看到的名字"
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="inviteCode">邀请码</FieldLabel>
+                  <Input
+                    id="inviteCode"
+                    type="text"
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                    className="font-mono text-center text-lg tracking-widest"
+                    placeholder="输入6位邀请码"
+                    maxLength={6}
+                    required
+                  />
+                </Field>
+                {error && (
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                )}
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading && <Spinner data-icon="inline-start" />}
+                  加入团体
+                </Button>
+              </FieldGroup>
             </form>
           </TabsContent>
 
           <TabsContent value="create">
-            <form onSubmit={handleCreate} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="create-nickname">团内昵称</Label>
-                <Input
-                  id="create-nickname"
-                  type="text"
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  placeholder="其他成员看到的名字"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="groupName">团体名称</Label>
-                <Input
-                  id="groupName"
-                  type="text"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  placeholder="给团体起个名字"
-                  required
-                />
-              </div>
-              {error && (
-                <p className="text-destructive text-sm text-center">{error}</p>
-              )}
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? "创建中..." : "创建团体"}
-              </Button>
+            <form onSubmit={handleCreate}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="create-nickname">团内昵称</FieldLabel>
+                  <Input
+                    id="create-nickname"
+                    type="text"
+                    value={nickname}
+                    onChange={(e) => setNickname(e.target.value)}
+                    placeholder="其他成员看到的名字"
+                    required
+                  />
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="groupName">团体名称</FieldLabel>
+                  <Input
+                    id="groupName"
+                    type="text"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    placeholder="给团体起个名字"
+                    required
+                  />
+                </Field>
+                {error && (
+                  <p className="text-sm text-destructive text-center">{error}</p>
+                )}
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading && <Spinner data-icon="inline-start" />}
+                  创建团体
+                </Button>
+              </FieldGroup>
             </form>
           </TabsContent>
         </Tabs>

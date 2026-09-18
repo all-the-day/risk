@@ -3,11 +3,28 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Copy, MessageSquare, LogOut, BarChart3, UserPen, UserMinus } from "lucide-react";
+import {
+  BarChart3,
+  ChevronRight,
+  CopyIcon,
+  LogOut,
+  MessageSquare,
+  UserMinus,
+  UserPen,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Dialog,
   DialogContent,
@@ -150,8 +167,8 @@ export default function ProfileClient({
       {/* User info */}
       <Card className="mb-4">
         <CardContent className="p-5">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="size-14 bg-gradient-to-br from-primary to-primary/60 rounded-full flex items-center justify-center shadow-sm">
               <span className="text-white font-bold text-xl">
                 {nickname.charAt(0)}
               </span>
@@ -166,25 +183,20 @@ export default function ProfileClient({
 
       {/* Invite code card */}
       <Card className="mb-4">
-        <CardContent className="p-5">
-          <h3 className="text-sm font-medium text-muted-foreground mb-3">
-            邀请码
-          </h3>
+        <CardHeader>
+          <CardTitle className="text-sm text-muted-foreground">邀请码</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xl tracking-widest font-medium">
               {inviteCode}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyInviteCode}
-              className="gap-1.5"
-            >
-              <Copy className="size-3.5" />
+            <Button variant="outline" size="sm" onClick={copyInviteCode}>
+              <CopyIcon data-icon="inline-start" />
               {copied ? "已复制" : "复制"}
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground">
             分享邀请码给其他人，让他们加入你的团体
           </p>
         </CardContent>
@@ -203,7 +215,7 @@ export default function ProfileClient({
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />
           </Link>
-          <div className="border-t" />
+          <Separator />
           <button
             onClick={() => setShowFeedback(true)}
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
@@ -214,7 +226,7 @@ export default function ProfileClient({
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />
           </button>
-          <div className="border-t" />
+          <Separator />
           <button
             onClick={() => {
               setRenameValue(nickname);
@@ -228,7 +240,7 @@ export default function ProfileClient({
             </div>
             <ChevronRight className="size-4 text-muted-foreground" />
           </button>
-          <div className="border-t" />
+          <Separator />
           <button
             onClick={leaveGroup}
             className="w-full flex items-center justify-between px-5 py-4 hover:bg-muted/50 transition-colors"
@@ -249,7 +261,7 @@ export default function ProfileClient({
         className="w-full text-muted-foreground hover:text-destructive gap-2"
         size="sm"
       >
-        <LogOut className="size-4" />
+        <LogOut data-icon="inline-start" />
         退出登录
       </Button>
 
@@ -260,24 +272,25 @@ export default function ProfileClient({
             <DialogTitle>修改家内昵称</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="rename-nickname">
+          <Field>
+            <FieldLabel htmlFor="rename-nickname">
               在「{groupName}」中显示的昵称
-            </Label>
+            </FieldLabel>
             <Input
               id="rename-nickname"
               value={renameValue}
               onChange={(e) => setRenameValue(e.target.value)}
               placeholder="2-20 个字，不能是手机号"
             />
-          </div>
+          </Field>
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowRename(false)}>
               取消
             </Button>
             <Button onClick={submitRename} disabled={renaming}>
-              {renaming ? "保存中..." : "保存"}
+              {renaming && <Spinner data-icon="inline-start" />}
+              保存
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -296,31 +309,35 @@ export default function ProfileClient({
                 <DialogTitle>意见反馈</DialogTitle>
               </DialogHeader>
 
-              <div className="flex gap-2">
-                <Button
-                  variant={feedbackType === "bug" ? "destructive" : "outline"}
-                  size="sm"
-                  onClick={() => setFeedbackType("bug")}
-                >
-                  Bug 反馈
-                </Button>
-                <Button
-                  variant={
-                    feedbackType === "feature" ? "default" : "outline"
-                  }
-                  size="sm"
-                  onClick={() => setFeedbackType("feature")}
-                >
-                  功能建议
-                </Button>
-              </div>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel>反馈类型</FieldLabel>
+                  <ToggleGroup
+                    value={[feedbackType]}
+                    onValueChange={(value) =>
+                      setFeedbackType(
+                        ((value as string[])[0] as "bug" | "feature") ?? "bug"
+                      )
+                    }
+                    variant="outline"
+                    size="sm"
+                  >
+                    <ToggleGroupItem value="bug">Bug 反馈</ToggleGroupItem>
+                    <ToggleGroupItem value="feature">功能建议</ToggleGroupItem>
+                  </ToggleGroup>
+                </Field>
 
-              <textarea
-                value={feedbackContent}
-                onChange={(e) => setFeedbackContent(e.target.value)}
-                placeholder="请描述你遇到的问题或建议..."
-                className="w-full h-32 px-3 py-2 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-ring text-sm"
-              />
+                <Field>
+                  <FieldLabel htmlFor="feedback-content">内容</FieldLabel>
+                  <Textarea
+                    id="feedback-content"
+                    value={feedbackContent}
+                    onChange={(e) => setFeedbackContent(e.target.value)}
+                    placeholder="请描述你遇到的问题或建议..."
+                    className="min-h-32"
+                  />
+                </Field>
+              </FieldGroup>
 
               {error && (
                 <p className="text-destructive text-sm">{error}</p>
@@ -333,11 +350,9 @@ export default function ProfileClient({
                 >
                   取消
                 </Button>
-                <Button
-                  onClick={submitFeedback}
-                  disabled={feedbackLoading}
-                >
-                  {feedbackLoading ? "提交中..." : "提交"}
+                <Button onClick={submitFeedback} disabled={feedbackLoading}>
+                  {feedbackLoading && <Spinner data-icon="inline-start" />}
+                  提交
                 </Button>
               </DialogFooter>
             </>

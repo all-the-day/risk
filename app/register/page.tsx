@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { validateNickname } from "@/lib/nickname";
 
 export default function RegisterPage() {
@@ -66,50 +72,51 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">注册账号</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nickname">昵称</Label>
-            <Input
-              id="nickname"
-              type="text"
-              autoComplete="username"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="请输入昵称"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              用昵称注册，请不要使用手机号
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">密码</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码（至少6位）"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">确认密码</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="请再次输入密码"
-              required
-            />
-          </div>
-          {error && (
-            <p className="text-destructive text-sm text-center">{error}</p>
-          )}
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "注册中..." : "注册"}
-          </Button>
+        <form onSubmit={handleSubmit}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="nickname">昵称</FieldLabel>
+              <Input
+                id="nickname"
+                type="text"
+                autoComplete="username"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="请输入昵称"
+                required
+              />
+              <FieldDescription>用昵称注册，请不要使用手机号</FieldDescription>
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="password">密码</FieldLabel>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="请输入密码（至少6位）"
+                required
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="confirmPassword">确认密码</FieldLabel>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="请再次输入密码"
+                required
+              />
+            </Field>
+            {error && (
+              <p className="text-sm text-destructive text-center">{error}</p>
+            )}
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading && <Spinner data-icon="inline-start" />}
+              注册
+            </Button>
+          </FieldGroup>
         </form>
         <p className="text-center mt-4 text-sm text-muted-foreground">
           已有账号？{" "}

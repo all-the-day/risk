@@ -49,7 +49,7 @@ export default async function GroupPage() {
           </>
         ) : (
           <p className="text-sm text-muted-foreground">
-            管理员还没有启用事项模板，请稍后再来。
+            管理员还没有配置项目，请稍后再来。
           </p>
         )}
       </main>
