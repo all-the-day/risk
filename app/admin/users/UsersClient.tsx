@@ -295,6 +295,8 @@ export default function UsersClient({
                           onClick={() => {
                             setActiveId(user.id);
                             setPasswordDraft("");
+                            // 打开时刷新一次，避免看到过期数据
+                            router.refresh();
                           }}
                         >
                           <SettingsIcon data-icon="inline-start" />

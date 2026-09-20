@@ -87,6 +87,8 @@ export default function GroupsClient({ groups }: { groups: AdminGroup[] }) {
   function openGroup(group: AdminGroup) {
     setActiveId(group.id);
     setNameDraft(group.name);
+    // 打开时刷新一次，避免看到过期数据
+    router.refresh();
   }
 
   async function patchGroup(

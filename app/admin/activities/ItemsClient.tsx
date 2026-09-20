@@ -148,6 +148,8 @@ export default function ItemsClient({
     });
     setReadOnly(false);
     setSheetOpen(true);
+    // 打开时刷新列表，避免看到过期数据（表单沿用点开那一刻的值）
+    router.refresh();
   }
 
   function openView(item: AdminItem) {
