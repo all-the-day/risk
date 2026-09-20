@@ -60,13 +60,14 @@ async function run() {
   });
 
   await test('2. 今日页显示项目（主日项当天不出现）', async () => {
-    const body = await page.textContent('body');
+    // 只看渲染出来的清单，别读 body 全文（dev 模式下 Next devtools 会把服务端原始数据塞进 script）
+    const listText = await page.locator('section').first().innerText();
     for (const token of ['CX', '追求', 'XP', '团体DG', 'Gospel', '卫生', '背经']) {
-      if (!body.includes(token)) throw new Error(`未找到「${token}」`);
+      if (!listText.includes(token)) throw new Error(`清单里未找到「${token}」`);
     }
     if (new Date().getDay() !== 0) {
       for (const token of ['ZR', '申言']) {
-        if (body.includes(token)) throw new Error(`非主日不应出现「${token}」`);
+        if (listText.includes(token)) throw new Error(`非主日不应出现「${token}」`);
       }
     }
   });
