@@ -314,7 +314,7 @@ export default function UsersClient({
 
       {/* 新增用户 */}
       <Sheet open={createOpen} onOpenChange={setCreateOpen}>
-        <SheetContent className="w-full gap-0 sm:max-w-md">
+        <SheetContent size="md" className="w-full gap-0">
           <SheetHeader>
             <SheetTitle>新增用户</SheetTitle>
             <SheetDescription>
@@ -373,7 +373,7 @@ export default function UsersClient({
           if (!open) setActiveId(null);
         }}
       >
-        <SheetContent className="w-full gap-0 sm:max-w-md">
+        <SheetContent size="md" className="w-full gap-0">
           <SheetHeader>
             <SheetTitle>{active?.nickname ?? ""}</SheetTitle>
             <SheetDescription>

@@ -330,7 +330,7 @@ export default function GroupsClient({ groups }: { groups: AdminGroup[] }) {
           if (!open) setActiveId(null);
         }}
       >
-        <SheetContent className="w-full gap-0 sm:max-w-md">
+        <SheetContent size="md" className="w-full gap-0">
           <SheetHeader>
             <SheetTitle>{active?.name ?? ""}</SheetTitle>
             <SheetDescription>

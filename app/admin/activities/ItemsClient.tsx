@@ -507,7 +507,7 @@ export default function ItemsClient({
       </div>
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full gap-0 sm:max-w-md">
+        <SheetContent size="md" className="w-full gap-0">
           <SheetHeader>
             <SheetTitle>
               {readOnly ? form.name : form.id ? "编辑项目" : "新增项目"}
