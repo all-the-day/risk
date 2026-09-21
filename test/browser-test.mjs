@@ -194,13 +194,18 @@ async function run() {
     if (msg.type() === 'error') errors.push(`[admin] ${msg.text()}`);
   });
   adminPage.on('pageerror', (e) => errors.push(`[admin] JS 异常: ${e}`));
+  adminPage.on('response', (r) => {
+    if (r.status() >= 500) {
+      console.log(`   [500] ${r.request().method()} ${r.url()}`);
+    }
+  });
 
   await test('9. 管理员登录并打开周分录入', async () => {
     await login(adminPage, ADMIN);
     await adminPage.goto(`${BASE_URL}/admin/scores`);
     await adminPage.waitForLoadState('networkidle');
     const body = await adminPage.textContent('body');
-    for (const token of ['周分录入', '成员', '本家合计', '自动', '恢复自动']) {
+    for (const token of ['周分录入', '成员', '本家合计', '自动']) {
       if (!body.includes(token)) throw new Error(`未找到「${token}」`);
     }
   });
@@ -241,28 +246,38 @@ async function run() {
       (el) => el.children.length === 0 && el.textContent === "已锁定"
     ).length === target;
 
-  await test('11. 录入某格后变为已锁定', async () => {
+  // 网格里每个格子整格是个按钮，点开录入抽屉
+  const scoreCells = () => adminPage.locator('button[aria-label^="录入 "]');
+  const autoCell = () => scoreCells().filter({ hasText: '自动' }).first();
+  const lockedCell = () => scoreCells().filter({ hasText: '已锁定' }).first();
+  const closeSheet = async () => {
+    // 抽屉里有两个叫「关闭」的按钮（右上角 X 和底部按钮），只点底部那个
+    await adminPage
+      .locator('[data-slot="sheet-footer"] button', { hasText: '关闭' })
+      .first()
+      .click();
+    await adminPage.waitForTimeout(400);
+  };
+
+  await test('11. 抽屉「按总分」录入后变为已锁定', async () => {
     await adminPage.goto(`${BASE_URL}/admin/scores`);
     await adminPage.waitForLoadState('networkidle');
     const locked = () => adminPage.evaluate(countLockedJs);
 
-    // 若当前组全部已锁定，先恢复一格，保证有可录入的格子
-    if ((await adminPage.locator('button[title="录入本周总分"]').count()) === 0) {
-      const revert = adminPage.getByRole('button', { name: '恢复自动' }).first();
-      if ((await revert.count()) === 0) throw new Error('没有可录入的格子');
-      await revert.click();
+    // 全锁定时先恢复一格，保证有「自动」状态的格子可录
+    if ((await autoCell().count()) === 0) {
+      await lockedCell().click();
+      await adminPage.getByRole('button', { name: '恢复自动' }).click();
       await adminPage.waitForTimeout(1500);
+      await closeSheet();
     }
 
     const before = await locked();
     console.log(`   录入前已锁定 ${before} 格`);
 
-    const addButton = adminPage.locator('button[title="录入本周总分"]').first();
-    if ((await addButton.count()) === 0) throw new Error('没有可录入的格子');
-    await addButton.click();
-    const input = adminPage.locator('input[inputmode="numeric"]').first();
-    await input.fill('40');
-    await input.press('Enter');
+    await autoCell().click();
+    await adminPage.locator('input#week-total').fill('40');
+    await adminPage.getByRole('button', { name: '保存' }).click();
 
     // 等格子真的变成已锁定（dev 模式保存 + 刷新较慢，别用固定 sleep）
     await adminPage.waitForFunction(lockedEqualsJs, before + 1, {
@@ -272,24 +287,71 @@ async function run() {
     const after = await locked();
     console.log(`   录入后已锁定 ${after} 格`);
     if (after !== before + 1) throw new Error(`已锁定格数 ${before} → ${after}，没加 1`);
+
+    await closeSheet();
     if (!(await adminPage.textContent('body')).includes('40')) {
       throw new Error('录入的分数 40 没有显示');
     }
   });
 
-  await test('12. 恢复自动', async () => {
+  await test('12. 抽屉里恢复自动', async () => {
     const locked = () => adminPage.evaluate(countLockedJs);
     const before = await locked();
-    await adminPage.getByRole('button', { name: '恢复自动' }).first().click();
+
+    await lockedCell().click();
+    await adminPage.getByRole('button', { name: '恢复自动' }).click();
     await adminPage.waitForFunction(lockedEqualsJs, before - 1, {
       timeout: 20000,
     });
+
     const after = await locked();
     console.log(`   恢复自动：${before} → ${after} 格`);
     if (after !== before - 1) throw new Error(`已锁定格数 ${before} → ${after}，没减 1`);
+    await closeSheet();
   });
 
-  await test('13. 非法成员/团体被拒（不写入）', async () => {
+  await test('13. 「按表格」改写一格并落库（关掉重开仍在）', async () => {
+    // 打开某格的抽屉并切到按表格，返回第一个 CX 格子（按位置定位，因为勾选态会改 aria-label）
+    const openGrid = async () => {
+      await scoreCells().first().click();
+      await adminPage.getByRole('button', { name: '按表格' }).click();
+      const cell = adminPage.locator('button[aria-label^="CX "]').first();
+      await cell.waitFor({ timeout: 20000 }); // 等明细加载完（加载中是 Skeleton）
+      return cell;
+    };
+    const waitState = (want) =>
+      adminPage.waitForFunction(
+        (expected) =>
+          document
+            .querySelector('button[aria-label^="CX "]')
+            ?.getAttribute('aria-pressed') === expected,
+        want,
+        { timeout: 20000 }
+      );
+
+    // 不假设初始是勾还是没勾：翻一次再翻回来，天然幂等
+    let cell = await openGrid();
+    const wasOn = (await cell.getAttribute('aria-pressed')) === 'true';
+    const flipped = String(!wasOn);
+
+    await cell.click();
+    await waitState(flipped);
+
+    // 关掉再打开：状态应由服务端读回，说明真的落库了
+    await closeSheet();
+    cell = await openGrid();
+    const persisted = await cell.getAttribute('aria-pressed');
+    if (persisted !== flipped) {
+      throw new Error(`重开后状态是 ${persisted}，应为 ${flipped}`);
+    }
+
+    // 收尾：翻回原状，不给下次运行留状态
+    await cell.click();
+    await waitState(String(wasOn));
+    await closeSheet();
+  });
+
+  await test('14. 非法成员/团体被拒（不写入）', async () => {
     const res = await adminPage.request.put(`${BASE_URL}/api/admin/scores`, {
       data: {
         userId: 'not-exist',
@@ -302,7 +364,7 @@ async function run() {
     console.log(`   返回 ${res.status()}`);
   });
 
-  await test('14. 未登录不能录入', async () => {
+  await test('15. 未登录不能录入', async () => {
     const anon = await browser.newContext();
     const res = await anon.request.put(`${BASE_URL}/api/admin/scores`, {
       data: { userId: 'x', groupId: 'y', weekStart: '2026-09-13', score: 10 },
@@ -311,7 +373,7 @@ async function run() {
     if (res.status() !== 401) throw new Error(`未登录应返回 401，实际 ${res.status()}`);
   });
 
-  await test('15. 项目软删除与恢复（记录保留）', async () => {
+  await test('16. 项目软删除与恢复（记录保留）', async () => {
     const rows = () => adminPage.locator('table tbody tr').count();
     const waitRows = (want) =>
       adminPage.waitForFunction(
@@ -379,7 +441,7 @@ async function run() {
   await adminContext.close();
   await browser.close();
 
-  await test('16. 控制台无 JavaScript 错误', async () => {
+  await test('17. 控制台无 JavaScript 错误', async () => {
     if (errors.length > 0) throw new Error(errors.slice(0, 3).join(' | '));
   });
 

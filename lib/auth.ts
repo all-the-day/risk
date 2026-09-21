@@ -82,3 +82,17 @@ export async function requireAdmin() {
   if (!user.isAdmin) redirect("/today");
   return user;
 }
+
+// Route Handler 用的管理员校验（页面里的 requireAdmin 是 redirect，不能用于 API）
+export async function requireAdminApi() {
+  const session = await getSession();
+  if (!session) return { error: "未登录", status: 401 as const };
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { id: true, isAdmin: true },
+  });
+  if (!user?.isAdmin) return { error: "无权限", status: 403 as const };
+
+  return { userId: user.id };
+}

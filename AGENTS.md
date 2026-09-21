@@ -119,7 +119,7 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/report` | **周表**：周次多选 + 成员卡片视图 / 图表视图（柱状或折线）/ 表格视图（姓名列固定）；团长/管理员看全表，成员仅自己 |
 | `/group` | 本家今日完成项数（分母 = 当天可打卡项目数）：团长/管理员看全员，成员仅自己 |
 | `/profile` | 昵称、邀请码、反馈、退出 |
-| `/admin/scores` | **周分录入**：网格 inline 编辑，自动 / 已锁定 / 恢复自动 |
+| `/admin/scores` | **周分录入**：成员 × 周网格，点格子开抽屉；抽屉里「按总分」（写 WeeklyScore 覆盖）/「按表格」（9 项目 × 7 天矩阵，逐格写打卡记录） |
 | `/admin/activities` | **项目管理**（唯一项目入口）：一屏项目列表（搜索、上下移、行内启停、删除）+ 右侧抽屉表单（名称/分值/每周次数/打卡日/类型/启用） |
 | `/admin/{groups,users,feedback}` | 团体 / 用户 / 反馈 |
 | `/admin` | 重定向到 `/admin/scores` |
@@ -131,6 +131,7 @@ JWT 存在 httpOnly cookie `session`（7 天）。全部会话相关都在 **`li
 | `/api/auth/{login,register,logout}` | POST | 认证 |
 | `/api/records` | POST | 打卡切换 `{itemId, date?}`；校验项目启用 + 今天是否可打卡 |
 | `/api/admin/scores` | PUT / DELETE | 录入 / 恢复自动 `{userId, groupId, weekStart, score?}` |
+| `/api/admin/records` | GET / PUT | 管理员代录打卡：GET 读某成员某周明细；PUT `{userId, itemId, date, checked}`（与成员自己打的卡是同一份记录） |
 | `/api/admin/activities/items` | POST | 新建项目（`name`、`score`、`checksPerWeek`、`allowedWeekdays`、`scope`） |
 | `/api/admin/activities/items/[id]` | PATCH / DELETE | 改项目（`restore: true` = 从回收站恢复）/ 软删除 |
 | `/api/admin/groups/[id]` | PATCH / DELETE | 团体改名 / 禁用 / 重置邀请码 / 任命团长（`leaderMemberId`，全家唯一）；DELETE 带 `memberId` 移除成员、不带则删整个团体（级联成员与周分） |

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { getEnabledItems } from "@/db/activity";
 import { getRecentWeeks } from "@/lib/date";
 import { getWeeklyTable } from "@/services/weekly-score";
 import ScoreGridClient from "./ScoreGridClient";
@@ -24,9 +25,9 @@ export default async function AdminScoresPage({
     );
   }
 
+  const items = await getEnabledItems();
   const current = groups.find((item) => item.id === group) ?? groups[0];
   const table = await getWeeklyTable(current.id, getRecentWeeks(6));
-
   if (!table) {
     return (
       <p className="text-sm text-muted-foreground">
@@ -42,6 +43,13 @@ export default async function AdminScoresPage({
       weeks={table.weeks}
       members={table.members}
       maxScore={table.maxScore}
+      items={items.map((item) => ({
+        id: item.id,
+        name: item.name,
+        score: item.score,
+        checksPerWeek: item.checksPerWeek,
+        allowedWeekdays: item.allowedWeekdays,
+      }))}
     />
   );
 }

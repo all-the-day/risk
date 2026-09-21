@@ -29,6 +29,24 @@ export function addWeeks(weekStart: string, n: number): string {
   return format(addDays(parseISO(weekStart), n * 7), "yyyy-MM-dd");
 }
 
+// 该周的 7 天（周日 → 周六）
+export function getWeekDates(weekStart: string): string[] {
+  const start = parseISO(weekStart);
+  return Array.from({ length: 7 }, (_, i) =>
+    format(addDays(start, i), "yyyy-MM-dd")
+  );
+}
+
+// 周几的短标签（0=周日）
+export function formatWeekdayShort(date: string): string {
+  return ["日", "一", "二", "三", "四", "五", "六"][getWeekdayOf(date)];
+}
+
+// 月/日（用于表格列头）
+export function formatMonthDay(date: string): string {
+  return format(parseISO(date), "M/d");
+}
+
 // 最近 count 周，升序，末位为本周
 export function getRecentWeeks(count = 8): string[] {
   const current = getCurrentWeekStart();

@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { PencilIcon, PlusIcon } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Spinner } from "@/components/ui/spinner";
 import {
   Select,
   SelectContent,
@@ -23,7 +18,10 @@ import {
 } from "@/components/ui/select";
 import WeekPicker from "@/components/WeekPicker";
 import { formatWeekLabel } from "@/lib/date";
-import { toast } from "@/components/ui/toast";
+import ScoreEntrySheet, {
+  type EntryItem,
+  type EntryTarget,
+} from "./ScoreEntrySheet";
 import type { MemberWeekRow } from "@/services/weekly-score";
 
 interface ScoreGridClientProps {
@@ -32,6 +30,7 @@ interface ScoreGridClientProps {
   weeks: string[];
   members: MemberWeekRow[];
   maxScore: number;
+  items: EntryItem[];
 }
 
 const cellKey = (userId: string, week: string) => `${userId}|${week}`;
@@ -42,6 +41,7 @@ export default function ScoreGridClient({
   weeks,
   members,
   maxScore,
+  items,
 }: ScoreGridClientProps) {
   const router = useRouter();
   const [selected, setSelected] = useState<string[]>(weeks.slice(-2));
@@ -57,8 +57,17 @@ export default function ScoreGridClient({
       return init;
     }
   );
-  const [editing, setEditing] = useState<string | null>(null);
-  const [busy, setBusy] = useState<string | null>(null);
+  const [entry, setEntry] = useState<EntryTarget | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  // 每次打开换一个 key，让抽屉按最新的 auto / override 重新初始化；关闭时 key 不变，退场动画正常
+  const [openSeq, setOpenSeq] = useState(0);
+  // 抽屉里改过打卡后回传的最新自动分，省掉一次服务端往返
+  const [autoMap, setAutoMap] = useState<Record<string, number>>({});
+
+  // 换家后成员变了，旧的自动分不能再用
+  useEffect(() => {
+    setAutoMap({});
+  }, [groupId]);
 
   const orderedWeeks = weeks.filter((week) => selected.includes(week));
 
@@ -73,130 +82,57 @@ export default function ScoreGridClient({
   }
 
   function valueOf(userId: string, week: string) {
-    const override = overrides[cellKey(userId, week)];
+    const key = cellKey(userId, week);
+    const override = overrides[key];
+    if (override !== null && override !== undefined) return override;
     return (
-      override ??
+      autoMap[key] ??
       members.find((member) => member.userId === userId)?.byWeek[week]?.auto ??
       0
     );
   }
 
-  async function save(userId: string, week: string, raw: string) {
-    const key = cellKey(userId, week);
-    setEditing(null);
-
-    const text = raw.trim();
-    if (text === "") return; // 清空视为取消
-
-    const value = Number(text);
-    if (!Number.isInteger(value) || value < 0) {
-      toast.add({ title: "请输入不小于 0 的整数", type: "error" });
-      return;
-    }
-    if (value > maxScore) {
-      toast.add({ title: `分数不能超过满分 ${maxScore}`, type: "error" });
-      return;
-    }
-
-    setBusy(key);
-    try {
-      const res = await fetch("/api/admin/scores", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, groupId, weekStart: week, score: value }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "保存失败");
-      setOverrides((prev) => ({ ...prev, [key]: value }));
-      toast.add({
-        title: `已录入 ${value} 分（已锁定）`,
-        type: "success",
-      });
-    } catch (error) {
-      toast.add({
-        title: error instanceof Error ? error.message : "保存失败",
-        type: "error",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
-
-  async function revert(userId: string, week: string) {
-    const key = cellKey(userId, week);
-    setBusy(key);
-    try {
-      const res = await fetch("/api/admin/scores", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, groupId, weekStart: week }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "恢复失败");
-      setOverrides((prev) => ({ ...prev, [key]: null }));
-      toast.add({ title: "已恢复按自打卡汇总", type: "success" });
-    } catch (error) {
-      toast.add({
-        title: error instanceof Error ? error.message : "恢复失败",
-        type: "error",
-      });
-    } finally {
-      setBusy(null);
-    }
-  }
+  const entryCell = entry
+    ? members.find((member) => member.userId === entry.userId)?.byWeek[
+        entry.week
+      ]
+    : undefined;
 
   return (
     <div className="flex flex-col gap-4">
       <Card>
         <CardHeader>
           <CardTitle>周分录入</CardTitle>
-          <CardDescription>
-            默认按成员自打卡汇总；录入后覆盖并锁定，可随时恢复自动
-          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Select
-              value={groupId}
-              onValueChange={(value) => {
-                if (value) router.push(`/admin/scores?group=${value}`);
-              }}
-            >
-              <SelectTrigger size="sm" className="min-w-40">
-                <SelectValue>
-                  {(value: string | null) =>
-                    groups.find((group) => group.id === value)?.name ??
-                    "选择家"
-                  }
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {groups.map((group) => (
-                  <SelectItem key={group.id} value={group.id}>
-                    {group.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <CardContent className="flex flex-wrap items-center gap-3">
+          <Select
+            value={groupId}
+            onValueChange={(value) => {
+              if (value) router.push(`/admin/scores?group=${value}`);
+            }}
+          >
+            <SelectTrigger size="sm" className="min-w-40">
+              <SelectValue>
+                {(value: string | null) =>
+                  groups.find((group) => group.id === value)?.name ?? "选择家"
+                }
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-            <div className="min-w-0 flex-1">
-              <WeekPicker
-                weeks={weeks}
-                selected={orderedWeeks}
-                onToggle={toggleWeek}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <i className="inline-block h-4 w-8 rounded border border-border bg-muted" />
-              自动：成员自打卡汇总，点 ＋ / ✎ 可录入覆盖
-            </span>
-            <span className="flex items-center gap-1.5">
-              <i className="inline-block h-4 w-8 rounded border border-border bg-warning" />
-              已锁定：管理员录入，优先于自打卡，可恢复自动
-            </span>
+          <div className="min-w-0 flex-1">
+            <WeekPicker
+              weeks={weeks}
+              selected={orderedWeeks}
+              onToggle={toggleWeek}
+            />
           </div>
         </CardContent>
       </Card>
@@ -226,80 +162,42 @@ export default function ScoreGridClient({
                 </td>
                 {orderedWeeks.map((week) => {
                   const key = cellKey(member.userId, week);
-                  const auto = member.byWeek[week]?.auto ?? 0;
                   const override = overrides[key];
                   const locked = override !== null && override !== undefined;
-                  const value = locked ? override : auto;
-
-                  if (editing === key) {
-                    return (
-                      <td key={week} className="border-b bg-primary/5 p-1.5">
-                        <div className="flex justify-center">
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            defaultValue={value}
-                            autoFocus
-                            className="h-8 w-16 rounded-lg border-2 border-ring bg-card text-center text-sm font-semibold tabular-nums outline-none"
-                            onBlur={(event) =>
-                              save(member.userId, week, event.target.value)
-                            }
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                event.currentTarget.blur();
-                              }
-                              if (event.key === "Escape") setEditing(null);
-                            }}
-                          />
-                        </div>
-                      </td>
-                    );
-                  }
+                  const value = valueOf(member.userId, week);
 
                   return (
                     <td
                       key={week}
-                      className={`border-b p-1.5 ${
+                      className={`border-b p-0 ${
                         locked ? "bg-warning" : "bg-muted"
-                      } ${busy === key ? "opacity-60" : ""}`}
+                      }`}
                     >
-                      <div className="flex items-center justify-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEntry({
+                            userId: member.userId,
+                            nickname: member.nickname,
+                            week,
+                          });
+                          setOpenSeq((seq) => seq + 1);
+                          setSheetOpen(true);
+                        }}
+                        aria-label={`录入 ${member.nickname} ${formatWeekLabel(week)}，当前 ${value} 分（${locked ? "已锁定" : "自动"}）`}
+                        className="flex w-full items-center justify-center gap-1.5 px-2 py-2.5 transition-colors hover:bg-foreground/5"
+                      >
                         <span className="text-sm font-semibold tabular-nums">
                           {value}
                         </span>
-                        <Badge
-                          variant={locked ? "secondary" : "outline"}
-                          className="text-[10px]"
+                        <span
+                          className={`text-[10px] ${
+                            locked ? "text-foreground/70" : "text-muted-foreground"
+                          }`}
                         >
                           {locked ? "已锁定" : "自动"}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          title={locked ? "修改分数" : "录入本周总分"}
-                          aria-label={locked ? "修改分数" : "录入本周总分"}
-                          onClick={() => setEditing(key)}
-                        >
-                          {busy === key ? (
-                            <Spinner />
-                          ) : locked ? (
-                            <PencilIcon />
-                          ) : (
-                            <PlusIcon />
-                          )}
-                        </Button>
-                        {locked && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-1.5 text-[11px] text-primary hover:text-primary"
-                            onClick={() => revert(member.userId, week)}
-                          >
-                            恢复自动
-                          </Button>
-                        )}
-                      </div>
+                        </span>
+                      </button>
                     </td>
                   );
                 })}
@@ -327,6 +225,30 @@ export default function ScoreGridClient({
           </tfoot>
         </table>
       </div>
+
+      <ScoreEntrySheet
+        key={openSeq}
+        open={sheetOpen}
+        groupId={groupId}
+        target={entry}
+        auto={
+          entry
+            ? (autoMap[cellKey(entry.userId, entry.week)] ??
+              entryCell?.auto ??
+              0)
+            : 0
+        }
+        override={entry ? (overrides[cellKey(entry.userId, entry.week)] ?? null) : null}
+        maxScore={maxScore}
+        items={items}
+        onClose={() => setSheetOpen(false)}
+        onTotalSaved={(userId, week, override) => {
+          setOverrides((prev) => ({ ...prev, [cellKey(userId, week)]: override }));
+        }}
+        onAutoChange={(userId, week, auto) =>
+          setAutoMap((prev) => ({ ...prev, [cellKey(userId, week)]: auto }))
+        }
+      />
     </div>
   );
 }
