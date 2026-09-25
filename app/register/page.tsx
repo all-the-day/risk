@@ -9,37 +9,43 @@ import { Spinner } from "@/components/ui/spinner";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
 import { validateNickname } from "@/lib/nickname";
+
+type FieldName = "nickname" | "password" | "confirmPassword";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<{
+    message: string;
+    field?: FieldName;
+  } | null>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
+    setError(null);
 
     const nicknameError = validateNickname(nickname);
     if (nicknameError) {
-      setError(nicknameError);
+      setError({ message: nicknameError, field: "nickname" });
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("两次密码不一致");
+      setError({ message: "两次密码不一致", field: "confirmPassword" });
       return;
     }
 
     // 前端密码长度校验（UX优化，后端也会校验）
     if (password.length < 6) {
-      setError("密码至少6位");
+      setError({ message: "密码至少6位", field: "password" });
       return;
     }
 
@@ -55,21 +61,21 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "注册失败");
+        setError({ message: data.error || "注册失败" });
         return;
       }
 
       router.push("/join");
       router.refresh();
     } catch {
-      setError("网络错误，请重试");
+      setError({ message: "网络错误，请重试" });
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-dvh flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">注册账号</h1>
         <form onSubmit={handleSubmit}>
@@ -80,6 +86,8 @@ export default function RegisterPage() {
                 id="nickname"
                 type="text"
                 autoComplete="username"
+                className="h-11"
+                aria-invalid={error?.field === "nickname" || undefined}
                 value={nickname}
                 onChange={(e) => setNickname(e.target.value)}
                 placeholder="请输入昵称"
@@ -92,6 +100,9 @@ export default function RegisterPage() {
               <Input
                 id="password"
                 type="password"
+                autoComplete="new-password"
+                className="h-11"
+                aria-invalid={error?.field === "password" || undefined}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="请输入密码（至少6位）"
@@ -103,6 +114,9 @@ export default function RegisterPage() {
               <Input
                 id="confirmPassword"
                 type="password"
+                autoComplete="new-password"
+                className="h-11"
+                aria-invalid={error?.field === "confirmPassword" || undefined}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="请再次输入密码"
@@ -110,9 +124,9 @@ export default function RegisterPage() {
               />
             </Field>
             {error && (
-              <p className="text-sm text-destructive text-center">{error}</p>
+              <FieldError className="text-center">{error.message}</FieldError>
             )}
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="h-11 w-full">
               {loading && <Spinner data-icon="inline-start" />}
               注册
             </Button>

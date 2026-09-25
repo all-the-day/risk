@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function JoinPage() {
@@ -74,7 +74,7 @@ export default function JoinPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-dvh flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">加入团体</h1>
 
@@ -86,7 +86,7 @@ export default function JoinPage() {
           }}
           className="mb-6"
         >
-          <TabsList className="w-full">
+          <TabsList className="w-full group-data-horizontal/tabs:h-12">
             <TabsTrigger value="join">加入团体</TabsTrigger>
             <TabsTrigger value="create">创建团体</TabsTrigger>
           </TabsList>
@@ -99,6 +99,7 @@ export default function JoinPage() {
                   <Input
                     id="join-nickname"
                     type="text"
+                    className="h-11"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     placeholder="其他成员看到的名字"
@@ -112,16 +113,16 @@ export default function JoinPage() {
                     type="text"
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                    className="font-mono text-center text-lg tracking-widest"
+                    className="h-11 font-mono text-center text-lg tracking-widest"
                     placeholder="输入6位邀请码"
                     maxLength={6}
                     required
                   />
                 </Field>
                 {error && (
-                  <p className="text-sm text-destructive text-center">{error}</p>
+                  <FieldError className="text-center">{error}</FieldError>
                 )}
-                <Button type="submit" disabled={loading} className="w-full">
+                <Button type="submit" disabled={loading} className="h-11 w-full">
                   {loading && <Spinner data-icon="inline-start" />}
                   加入团体
                 </Button>
@@ -137,6 +138,7 @@ export default function JoinPage() {
                   <Input
                     id="create-nickname"
                     type="text"
+                    className="h-11"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
                     placeholder="其他成员看到的名字"
@@ -148,6 +150,7 @@ export default function JoinPage() {
                   <Input
                     id="groupName"
                     type="text"
+                    className="h-11"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     placeholder="给团体起个名字"
@@ -155,9 +158,9 @@ export default function JoinPage() {
                   />
                 </Field>
                 {error && (
-                  <p className="text-sm text-destructive text-center">{error}</p>
+                  <FieldError className="text-center">{error}</FieldError>
                 )}
-                <Button type="submit" disabled={loading} className="w-full">
+                <Button type="submit" disabled={loading} className="h-11 w-full">
                   {loading && <Spinner data-icon="inline-start" />}
                   创建团体
                 </Button>
