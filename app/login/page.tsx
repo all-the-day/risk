@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -88,77 +89,81 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">日课</h1>
 
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={errorOf("nickname") ? true : undefined}>
-              <FieldLabel htmlFor="nickname">昵称</FieldLabel>
-              <Input
-                id="nickname"
-                ref={nicknameRef}
-                type="text"
-                autoComplete="username"
-                className="h-11"
-                aria-invalid={errorOf("nickname") ? true : undefined}
-                aria-describedby={
-                  errorOf("nickname")
-                    ? "nickname-hint nickname-error"
-                    : "nickname-hint"
-                }
-                value={nickname}
-                onChange={(event) => {
-                  setNickname(event.target.value);
-                  setError((prev) => (prev?.field === "nickname" ? null : prev));
-                }}
-                placeholder="请输入昵称"
-                required
-              />
-              <FieldDescription id="nickname-hint">
-                用昵称登录，请不要使用手机号
-              </FieldDescription>
-              <FieldError id="nickname-error">{errorOf("nickname")}</FieldError>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="password">密码</FieldLabel>
-              <InputGroup className="h-11">
-                <InputGroupInput
-                  ref={passwordRef}
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  className="h-full"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="请输入密码"
-                  required
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    size="icon-sm"
-                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
-                    aria-pressed={showPassword}
-                    onClick={() => {
-                      setShowPassword((visible) => !visible);
-                      // 点按钮会把焦点带走，切完还给输入框才能接着打字
-                      passwordRef.current?.focus();
+        <Card>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <FieldGroup>
+                <Field data-invalid={errorOf("nickname") ? true : undefined}>
+                  <FieldLabel htmlFor="nickname">昵称</FieldLabel>
+                  <Input
+                    id="nickname"
+                    ref={nicknameRef}
+                    type="text"
+                    autoComplete="username"
+                    className="h-11"
+                    aria-invalid={errorOf("nickname") ? true : undefined}
+                    aria-describedby={
+                      errorOf("nickname")
+                        ? "nickname-hint nickname-error"
+                        : "nickname-hint"
+                    }
+                    value={nickname}
+                    onChange={(event) => {
+                      setNickname(event.target.value);
+                      setError((prev) => (prev?.field === "nickname" ? null : prev));
                     }}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-            </Field>
+                    placeholder="请输入昵称"
+                    required
+                  />
+                  <FieldDescription id="nickname-hint">
+                    用昵称登录，请不要使用手机号
+                  </FieldDescription>
+                  <FieldError id="nickname-error">{errorOf("nickname")}</FieldError>
+                </Field>
 
-            {error && !error.field && (
-              <FieldError className="text-center">{error.message}</FieldError>
-            )}
+                <Field>
+                  <FieldLabel htmlFor="password">密码</FieldLabel>
+                  <InputGroup className="h-11">
+                    <InputGroupInput
+                      ref={passwordRef}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      className="h-full"
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="请输入密码"
+                      required
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        size="icon-sm"
+                        aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                        aria-pressed={showPassword}
+                        onClick={() => {
+                          setShowPassword((visible) => !visible);
+                          // 点按钮会把焦点带走，切完还给输入框才能接着打字
+                          passwordRef.current?.focus();
+                        }}
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                </Field>
 
-            <Button type="submit" className="h-11 w-full" disabled={loading}>
-              {loading && <Spinner data-icon="inline-start" />}
-              登录
-            </Button>
-          </FieldGroup>
-        </form>
+                {error && !error.field && (
+                  <FieldError className="text-center">{error.message}</FieldError>
+                )}
+
+                <Button type="submit" className="h-11 w-full" disabled={loading}>
+                  {loading && <Spinner data-icon="inline-start" />}
+                  登录
+                </Button>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
 
         <p className="text-center mt-6 text-sm text-muted-foreground">
           还没有账号？{" "}

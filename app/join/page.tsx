@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -129,129 +130,147 @@ export default function JoinPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">加入团体</h1>
 
-        <Tabs
-          value={mode}
-          onValueChange={(v) => {
-            setMode(v as "join" | "create");
-            setError(null);
-          }}
-          className="mb-6"
-        >
-          <TabsList className="w-full group-data-horizontal/tabs:h-12">
-            <TabsTrigger value="join">加入团体</TabsTrigger>
-            <TabsTrigger value="create">创建团体</TabsTrigger>
-          </TabsList>
+        <Card>
+          <CardContent>
+            <Tabs
+              value={mode}
+              onValueChange={(v) => {
+                setMode(v as "join" | "create");
+                setError(null);
+              }}
+              className="gap-4"
+            >
+              <TabsList className="w-full group-data-horizontal/tabs:h-12">
+                <TabsTrigger value="join">加入团体</TabsTrigger>
+                <TabsTrigger value="create">创建团体</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="join">
-            <form onSubmit={handleJoin}>
-              <FieldGroup>
-                <Field data-invalid={errorOf("nickname") ? true : undefined}>
-                  <FieldLabel htmlFor="join-nickname">团内昵称</FieldLabel>
-                  <Input
-                    id="join-nickname"
-                    ref={joinNicknameRef}
-                    type="text"
-                    className="h-11"
-                    aria-invalid={errorOf("nickname") ? true : undefined}
-                    aria-describedby={
-                      errorOf("nickname") ? "join-nickname-error" : undefined
-                    }
-                    value={nickname}
-                    onChange={(e) => {
-                      setNickname(e.target.value);
-                      clearError("nickname");
-                    }}
-                    placeholder="其他成员看到的名字"
-                    required
-                  />
-                  <FieldError id="join-nickname-error">
-                    {errorOf("nickname")}
-                  </FieldError>
-                </Field>
-                <Field data-invalid={errorOf("inviteCode") ? true : undefined}>
-                  <FieldLabel htmlFor="inviteCode">邀请码</FieldLabel>
-                  <Input
-                    id="inviteCode"
-                    ref={inviteCodeRef}
-                    type="text"
-                    aria-invalid={errorOf("inviteCode") ? true : undefined}
-                    aria-describedby={
-                      errorOf("inviteCode") ? "inviteCode-error" : undefined
-                    }
-                    value={inviteCode}
-                    onChange={(e) => {
-                      setInviteCode(e.target.value.toUpperCase());
-                      clearError("inviteCode");
-                    }}
-                    className="h-11 font-mono text-center text-lg tracking-widest"
-                    placeholder="输入6位邀请码"
-                    maxLength={6}
-                    required
-                  />
-                  <FieldError id="inviteCode-error">
-                    {errorOf("inviteCode")}
-                  </FieldError>
-                </Field>
-                {error && !error.field && (
-                  <FieldError className="text-center">{error.message}</FieldError>
-                )}
-                <Button type="submit" disabled={loading} className="h-11 w-full">
-                  {loading && <Spinner data-icon="inline-start" />}
-                  加入团体
-                </Button>
-              </FieldGroup>
-            </form>
-          </TabsContent>
+              <TabsContent value="join">
+                <form onSubmit={handleJoin}>
+                  <FieldGroup>
+                    <Field data-invalid={errorOf("nickname") ? true : undefined}>
+                      <FieldLabel htmlFor="join-nickname">团内昵称</FieldLabel>
+                      <Input
+                        id="join-nickname"
+                        ref={joinNicknameRef}
+                        type="text"
+                        className="h-11"
+                        aria-invalid={errorOf("nickname") ? true : undefined}
+                        aria-describedby={
+                          errorOf("nickname") ? "join-nickname-error" : undefined
+                        }
+                        value={nickname}
+                        onChange={(e) => {
+                          setNickname(e.target.value);
+                          clearError("nickname");
+                        }}
+                        placeholder="其他成员看到的名字"
+                        required
+                      />
+                      <FieldError id="join-nickname-error">
+                        {errorOf("nickname")}
+                      </FieldError>
+                    </Field>
+                    <Field data-invalid={errorOf("inviteCode") ? true : undefined}>
+                      <FieldLabel htmlFor="inviteCode">邀请码</FieldLabel>
+                      <Input
+                        id="inviteCode"
+                        ref={inviteCodeRef}
+                        type="text"
+                        aria-invalid={errorOf("inviteCode") ? true : undefined}
+                        aria-describedby={
+                          errorOf("inviteCode") ? "inviteCode-error" : undefined
+                        }
+                        value={inviteCode}
+                        onChange={(e) => {
+                          setInviteCode(e.target.value.toUpperCase());
+                          clearError("inviteCode");
+                        }}
+                        className="h-11 font-mono text-center text-lg tracking-widest"
+                        placeholder="输入6位邀请码"
+                        maxLength={6}
+                        required
+                      />
+                      <FieldError id="inviteCode-error">
+                        {errorOf("inviteCode")}
+                      </FieldError>
+                    </Field>
+                    {error && !error.field && (
+                      <FieldError className="text-center">
+                        {error.message}
+                      </FieldError>
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="h-11 w-full"
+                    >
+                      {loading && <Spinner data-icon="inline-start" />}
+                      加入团体
+                    </Button>
+                  </FieldGroup>
+                </form>
+              </TabsContent>
 
-          <TabsContent value="create">
-            <form onSubmit={handleCreate}>
-              <FieldGroup>
-                <Field data-invalid={errorOf("nickname") ? true : undefined}>
-                  <FieldLabel htmlFor="create-nickname">团内昵称</FieldLabel>
-                  <Input
-                    id="create-nickname"
-                    ref={createNicknameRef}
-                    type="text"
-                    className="h-11"
-                    aria-invalid={errorOf("nickname") ? true : undefined}
-                    aria-describedby={
-                      errorOf("nickname") ? "create-nickname-error" : undefined
-                    }
-                    value={nickname}
-                    onChange={(e) => {
-                      setNickname(e.target.value);
-                      clearError("nickname");
-                    }}
-                    placeholder="其他成员看到的名字"
-                    required
-                  />
-                  <FieldError id="create-nickname-error">
-                    {errorOf("nickname")}
-                  </FieldError>
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="groupName">团体名称</FieldLabel>
-                  <Input
-                    id="groupName"
-                    type="text"
-                    className="h-11"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="给团体起个名字"
-                    required
-                  />
-                </Field>
-                {error && !error.field && (
-                  <FieldError className="text-center">{error.message}</FieldError>
-                )}
-                <Button type="submit" disabled={loading} className="h-11 w-full">
-                  {loading && <Spinner data-icon="inline-start" />}
-                  创建团体
-                </Button>
-              </FieldGroup>
-            </form>
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="create">
+                <form onSubmit={handleCreate}>
+                  <FieldGroup>
+                    <Field data-invalid={errorOf("nickname") ? true : undefined}>
+                      <FieldLabel htmlFor="create-nickname">团内昵称</FieldLabel>
+                      <Input
+                        id="create-nickname"
+                        ref={createNicknameRef}
+                        type="text"
+                        className="h-11"
+                        aria-invalid={errorOf("nickname") ? true : undefined}
+                        aria-describedby={
+                          errorOf("nickname")
+                            ? "create-nickname-error"
+                            : undefined
+                        }
+                        value={nickname}
+                        onChange={(e) => {
+                          setNickname(e.target.value);
+                          clearError("nickname");
+                        }}
+                        placeholder="其他成员看到的名字"
+                        required
+                      />
+                      <FieldError id="create-nickname-error">
+                        {errorOf("nickname")}
+                      </FieldError>
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="groupName">团体名称</FieldLabel>
+                      <Input
+                        id="groupName"
+                        type="text"
+                        className="h-11"
+                        value={groupName}
+                        onChange={(e) => setGroupName(e.target.value)}
+                        placeholder="给团体起个名字"
+                        required
+                      />
+                    </Field>
+                    {error && !error.field && (
+                      <FieldError className="text-center">
+                        {error.message}
+                      </FieldError>
+                    )}
+                    <Button
+                      type="submit"
+                      disabled={loading}
+                      className="h-11 w-full"
+                    >
+                      {loading && <Spinner data-icon="inline-start" />}
+                      创建团体
+                    </Button>
+                  </FieldGroup>
+                </form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

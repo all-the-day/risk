@@ -6,6 +6,7 @@ import Link from "next/link";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
   InputGroup,
@@ -122,131 +123,136 @@ export default function RegisterPage() {
     <div className="min-h-dvh flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <h1 className="text-2xl font-bold text-center mb-8">注册账号</h1>
-        <form onSubmit={handleSubmit}>
-          <FieldGroup>
-            <Field data-invalid={errorOf("nickname") ? true : undefined}>
-              <FieldLabel htmlFor="nickname">昵称</FieldLabel>
-              <Input
-                id="nickname"
-                ref={nicknameRef}
-                type="text"
-                autoComplete="username"
-                className="h-11"
-                aria-invalid={errorOf("nickname") ? true : undefined}
-                aria-describedby={
-                  errorOf("nickname")
-                    ? "nickname-hint nickname-error"
-                    : "nickname-hint"
-                }
-                value={nickname}
-                onChange={(e) => {
-                  setNickname(e.target.value);
-                  clearError("nickname");
-                }}
-                placeholder="请输入昵称"
-                required
-              />
-              <FieldDescription id="nickname-hint">
-                用昵称注册，请不要使用手机号
-              </FieldDescription>
-              <FieldError id="nickname-error">{errorOf("nickname")}</FieldError>
-            </Field>
 
-            <Field data-invalid={errorOf("password") ? true : undefined}>
-              <FieldLabel htmlFor="password">密码</FieldLabel>
-              <InputGroup className="h-11">
-                <InputGroupInput
-                  ref={passwordRef}
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  className="h-full"
-                  aria-invalid={errorOf("password") ? true : undefined}
-                  aria-describedby={
-                    errorOf("password") ? "password-error" : undefined
-                  }
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    clearError("password");
-                  }}
-                  placeholder="请输入密码（至少6位）"
-                  required
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    size="icon-sm"
-                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
-                    aria-pressed={showPassword}
-                    onClick={() => {
-                      setShowPassword((visible) => !visible);
-                      // 点按钮会把焦点带走，切完还给输入框才能接着打字
-                      passwordRef.current?.focus();
-                    }}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-              <FieldError id="password-error">{errorOf("password")}</FieldError>
-            </Field>
-
-            <Field data-invalid={errorOf("confirmPassword") ? true : undefined}>
-              <FieldLabel htmlFor="confirmPassword">确认密码</FieldLabel>
-              <InputGroup className="h-11">
-                <InputGroupInput
-                  ref={confirmPasswordRef}
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  autoComplete="new-password"
-                  className="h-full"
-                  aria-invalid={errorOf("confirmPassword") ? true : undefined}
-                  aria-describedby={
-                    errorOf("confirmPassword")
-                      ? "confirmPassword-error"
-                      : undefined
-                  }
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    clearError("confirmPassword");
-                  }}
-                  onBlur={handleConfirmBlur}
-                  placeholder="请再次输入密码"
-                  required
-                />
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    size="icon-sm"
-                    aria-label={
-                      showConfirmPassword ? "隐藏确认密码" : "显示确认密码"
+        <Card>
+          <CardContent>
+            <form onSubmit={handleSubmit}>
+              <FieldGroup>
+                <Field data-invalid={errorOf("nickname") ? true : undefined}>
+                  <FieldLabel htmlFor="nickname">昵称</FieldLabel>
+                  <Input
+                    id="nickname"
+                    ref={nicknameRef}
+                    type="text"
+                    autoComplete="username"
+                    className="h-11"
+                    aria-invalid={errorOf("nickname") ? true : undefined}
+                    aria-describedby={
+                      errorOf("nickname")
+                        ? "nickname-hint nickname-error"
+                        : "nickname-hint"
                     }
-                    aria-pressed={showConfirmPassword}
-                    onClick={() => {
-                      setShowConfirmPassword((visible) => !visible);
-                      confirmPasswordRef.current?.focus();
+                    value={nickname}
+                    onChange={(e) => {
+                      setNickname(e.target.value);
+                      clearError("nickname");
                     }}
-                  >
-                    {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </InputGroupButton>
-                </InputGroupAddon>
-              </InputGroup>
-              <FieldError id="confirmPassword-error">
-                {errorOf("confirmPassword")}
-              </FieldError>
-            </Field>
+                    placeholder="请输入昵称"
+                    required
+                  />
+                  <FieldDescription id="nickname-hint">
+                    用昵称注册，请不要使用手机号
+                  </FieldDescription>
+                  <FieldError id="nickname-error">{errorOf("nickname")}</FieldError>
+                </Field>
 
-            {/* 没有具体字段归属的报错（网络、服务端校验）留在表单底部 */}
-            {error && !error.field && (
-              <FieldError className="text-center">{error.message}</FieldError>
-            )}
+                <Field data-invalid={errorOf("password") ? true : undefined}>
+                  <FieldLabel htmlFor="password">密码</FieldLabel>
+                  <InputGroup className="h-11">
+                    <InputGroupInput
+                      ref={passwordRef}
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      className="h-full"
+                      aria-invalid={errorOf("password") ? true : undefined}
+                      aria-describedby={
+                        errorOf("password") ? "password-error" : undefined
+                      }
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        clearError("password");
+                      }}
+                      placeholder="请输入密码（至少6位）"
+                      required
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        size="icon-sm"
+                        aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                        aria-pressed={showPassword}
+                        onClick={() => {
+                          setShowPassword((visible) => !visible);
+                          // 点按钮会把焦点带走，切完还给输入框才能接着打字
+                          passwordRef.current?.focus();
+                        }}
+                      >
+                        {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <FieldError id="password-error">{errorOf("password")}</FieldError>
+                </Field>
 
-            <Button type="submit" disabled={loading} className="h-11 w-full">
-              {loading && <Spinner data-icon="inline-start" />}
-              注册
-            </Button>
-          </FieldGroup>
-        </form>
+                <Field data-invalid={errorOf("confirmPassword") ? true : undefined}>
+                  <FieldLabel htmlFor="confirmPassword">确认密码</FieldLabel>
+                  <InputGroup className="h-11">
+                    <InputGroupInput
+                      ref={confirmPasswordRef}
+                      id="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                      className="h-full"
+                      aria-invalid={errorOf("confirmPassword") ? true : undefined}
+                      aria-describedby={
+                        errorOf("confirmPassword")
+                          ? "confirmPassword-error"
+                          : undefined
+                      }
+                      value={confirmPassword}
+                      onChange={(e) => {
+                        setConfirmPassword(e.target.value);
+                        clearError("confirmPassword");
+                      }}
+                      onBlur={handleConfirmBlur}
+                      placeholder="请再次输入密码"
+                      required
+                    />
+                    <InputGroupAddon align="inline-end">
+                      <InputGroupButton
+                        size="icon-sm"
+                        aria-label={
+                          showConfirmPassword ? "隐藏确认密码" : "显示确认密码"
+                        }
+                        aria-pressed={showConfirmPassword}
+                        onClick={() => {
+                          setShowConfirmPassword((visible) => !visible);
+                          confirmPasswordRef.current?.focus();
+                        }}
+                      >
+                        {showConfirmPassword ? <EyeOffIcon /> : <EyeIcon />}
+                      </InputGroupButton>
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <FieldError id="confirmPassword-error">
+                    {errorOf("confirmPassword")}
+                  </FieldError>
+                </Field>
+
+                {/* 没有具体字段归属的报错（网络、服务端校验）留在表单底部 */}
+                {error && !error.field && (
+                  <FieldError className="text-center">{error.message}</FieldError>
+                )}
+
+                <Button type="submit" disabled={loading} className="h-11 w-full">
+                  {loading && <Spinner data-icon="inline-start" />}
+                  注册
+                </Button>
+              </FieldGroup>
+            </form>
+          </CardContent>
+        </Card>
         <p className="text-center mt-6 text-sm text-muted-foreground">
           已有账号？{" "}
           <Link href="/login" className="text-primary hover:underline">
