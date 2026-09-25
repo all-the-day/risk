@@ -186,7 +186,7 @@ export default function JoinPage() {
                           setInviteCode(e.target.value.toUpperCase());
                           clearError("inviteCode");
                         }}
-                        className="h-11 font-mono text-center text-lg tracking-widest"
+                        className="h-11 font-mono text-center text-lg tracking-widest placeholder:font-sans placeholder:tracking-normal"
                         placeholder="输入6位邀请码"
                         maxLength={6}
                         required
