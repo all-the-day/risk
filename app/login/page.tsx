@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { Spinner } from "@/components/ui/spinner";
 import {
   Field,
@@ -22,11 +29,27 @@ export default function LoginPage() {
   const router = useRouter();
   const [nickname, setNickname] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<{
     message: string;
     field?: FieldName;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const nicknameRef = useRef<HTMLInputElement>(null);
+  const passwordRef = useRef<HTMLInputElement>(null);
+
+  const fieldRefs = { nickname: nicknameRef, password: passwordRef };
+
+  /** 字段级错误：只有带 field 的报错才渲染到对应输入框下方 */
+  const errorOf = (field: FieldName) =>
+    error?.field === field ? error.message : undefined;
+
+  /** 报错并把焦点送到出问题的字段：提交被拦下时，用户不用自己找是哪一项 */
+  function fail(field: FieldName, message: string) {
+    setError({ message, field });
+    fieldRefs[field].current?.focus();
+  }
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -34,7 +57,7 @@ export default function LoginPage() {
 
     const nicknameError = validateNickname(nickname);
     if (nicknameError) {
-      setError({ message: nicknameError, field: "nickname" });
+      fail("nickname", nicknameError);
       return;
     }
 
@@ -47,6 +70,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) {
+        // 「昵称或密码错误」同时涉及两个字段，只适合做表单级提示
         setError({ message: data.error || "登录失败" });
         return;
       }
@@ -66,38 +90,66 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <FieldGroup>
-            <Field>
+            <Field data-invalid={errorOf("nickname") ? true : undefined}>
               <FieldLabel htmlFor="nickname">昵称</FieldLabel>
               <Input
                 id="nickname"
+                ref={nicknameRef}
                 type="text"
                 autoComplete="username"
                 className="h-11"
-                aria-invalid={error?.field === "nickname" || undefined}
+                aria-invalid={errorOf("nickname") ? true : undefined}
+                aria-describedby={
+                  errorOf("nickname")
+                    ? "nickname-hint nickname-error"
+                    : "nickname-hint"
+                }
                 value={nickname}
-                onChange={(event) => setNickname(event.target.value)}
+                onChange={(event) => {
+                  setNickname(event.target.value);
+                  setError((prev) => (prev?.field === "nickname" ? null : prev));
+                }}
                 placeholder="请输入昵称"
                 required
               />
-              <FieldDescription>用昵称登录，请不要使用手机号</FieldDescription>
+              <FieldDescription id="nickname-hint">
+                用昵称登录，请不要使用手机号
+              </FieldDescription>
+              <FieldError id="nickname-error">{errorOf("nickname")}</FieldError>
             </Field>
 
             <Field>
               <FieldLabel htmlFor="password">密码</FieldLabel>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                className="h-11"
-                aria-invalid={error?.field === "password" || undefined}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="请输入密码"
-                required
-              />
+              <InputGroup className="h-11">
+                <InputGroupInput
+                  ref={passwordRef}
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  className="h-full"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="请输入密码"
+                  required
+                />
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    size="icon-sm"
+                    aria-label={showPassword ? "隐藏密码" : "显示密码"}
+                    aria-pressed={showPassword}
+                    onClick={() => {
+                      setShowPassword((visible) => !visible);
+                      // 点按钮会把焦点带走，切完还给输入框才能接着打字
+                      passwordRef.current?.focus();
+                    }}
+                  >
+                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                  </InputGroupButton>
+                </InputGroupAddon>
+              </InputGroup>
             </Field>
 
-            {error && (
+            {error && !error.field && (
               <FieldError className="text-center">{error.message}</FieldError>
             )}
 
@@ -108,7 +160,7 @@ export default function LoginPage() {
           </FieldGroup>
         </form>
 
-        <p className="text-center mt-4 text-sm text-muted-foreground">
+        <p className="text-center mt-6 text-sm text-muted-foreground">
           还没有账号？{" "}
           <Link href="/register" className="text-primary hover:underline">
             注册
